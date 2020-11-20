@@ -1,0 +1,7 @@
+.dockerignore
+.DS_Store
+.gitignore
+Dockerfile
+LICENSE
+Makefile
+README.md
