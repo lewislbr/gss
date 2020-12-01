@@ -1,12 +1,15 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 )
+
+var dir, port string
 
 func main() {
 	if err := start(); err != nil {
@@ -17,7 +20,9 @@ func main() {
 
 // start initializes the server
 func start() error {
-	httpServer := customHTTPServer(addHeaders(serveSPA("dist")))
+	setUpCLI()
+
+	httpServer := customHTTPServer(port, addHeaders(serveSPA(dir)))
 
 	fmt.Println("GSS ready ✅")
 
@@ -29,11 +34,18 @@ func start() error {
 	return nil
 }
 
+// setUpCLI enables configuration via CLI
+func setUpCLI() {
+	flag.StringVar(&dir, "d", "dist", "Container path to the directory to serve.")
+	flag.StringVar(&port, "p", "80", "Port where to run the server.")
+	flag.Parse()
+}
+
 // customHTTPServer configures a basic HTTP server
-func customHTTPServer(handler http.Handler) *http.Server {
+func customHTTPServer(port string, h http.Handler) *http.Server {
 	return &http.Server{
-		Addr:         ":80",
-		Handler:      handler,
+		Addr:         ":" + port,
+		Handler:      h,
 		IdleTimeout:  120 * time.Second,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
