@@ -9,16 +9,16 @@ GSS works with Docker. By default it serves a directory named `dist` at port `80
 With only the CLI:
 
 ```sh
-docker run -p [port you want to use]:80 -v [absolute path to your SPA build folder]:/dist gss:latest
+docker run -p [port you want to use]:80 -v [absolute path to your SPA build folder]:/dist lewislbr/gss:latest
 
 # Example:
-docker run -p 1234:80 -v $PWD/public:/dist gss:latest
+docker run -p 1234:80 -v $PWD/public:/dist lewislbr/gss:latest
 ```
 
 With a Dockerile:
 
 ```dockerfile
-FROM gss:latest
+FROM lewislbr/gss:latest
 COPY [path to your SPA build folder] ./dist
 ```
 
