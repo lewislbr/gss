@@ -17,9 +17,7 @@ func main() {
 
 // start initializes the server
 func start() error {
-	httpServer := customHTTPServer(
-		responseMiddleware(serveSPA("dist")),
-	)
+	httpServer := customHTTPServer(addHeaders(serveSPA("dist")))
 
 	fmt.Println("GSS ready ✅")
 
@@ -44,23 +42,23 @@ func customHTTPServer(handler http.Handler) *http.Server {
 
 // serveSPA serves files from a directory, defaulting to the index if the root
 // is requested or a file is not found, leaving it for the SPA to handle
-func serveSPA(directory string) http.HandlerFunc {
+func serveSPA(dir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		requestedPath := filepath.Join(directory, filepath.Clean(r.URL.Path))
+		reqFile := filepath.Join(dir, filepath.Clean(r.URL.Path))
 
 		if filepath.Clean(r.URL.Path) == "/" {
-			requestedPath = requestedPath + "/index.html"
+			reqFile = reqFile + "/index.html"
 		}
-		if _, err := os.Stat(requestedPath); os.IsNotExist(err) {
-			requestedPath = filepath.Join(directory, "index.html")
+		if _, err := os.Stat(reqFile); os.IsNotExist(err) {
+			reqFile = filepath.Join(dir, "index.html")
 		}
 
-		http.ServeFile(w, r, requestedPath)
+		http.ServeFile(w, r, reqFile)
 	}
 }
 
-// responseMiddleware adds custom headers to the response
-func responseMiddleware(h http.Handler) http.HandlerFunc {
+// addHeaders adds custom headers to the response
+func addHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Server", "GSS")
 
