@@ -15,6 +15,7 @@ func main() {
 	}
 }
 
+// start initializes the server
 func start() error {
 	httpServer := customHTTPServer(
 		responseMiddleware(serveSPA("dist")),
@@ -30,6 +31,7 @@ func start() error {
 	return nil
 }
 
+// customHTTPServer configures a basic HTTP server
 func customHTTPServer(handler http.Handler) *http.Server {
 	return &http.Server{
 		Addr:         ":80",
@@ -40,6 +42,8 @@ func customHTTPServer(handler http.Handler) *http.Server {
 	}
 }
 
+// serveSPA serves files from a directory, defaulting to the index if the root
+// is requested or a file is not found, leaving it for the SPA to handle
 func serveSPA(directory string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requestedPath := filepath.Join(directory, filepath.Clean(r.URL.Path))
@@ -55,6 +59,7 @@ func serveSPA(directory string) http.HandlerFunc {
 	}
 }
 
+// responseMiddleware adds custom headers to the response
 func responseMiddleware(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Server", "GSS")
