@@ -9,3 +9,4 @@ RUN go build -o gss -ldflags '-s -w' src/main.go
 
 FROM scratch
 COPY --from=build /gss ./
+ENTRYPOINT ["/gss"]
