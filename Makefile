@@ -1,7 +1,5 @@
-build:
-	@docker build \
-	-t lewislbr/gss:$(shell git describe --tags --abbrev=0) \
-	-t lewislbr/gss:latest .
+build-test:
+	@docker build -t lewislbr/gss:test .
 
 run-test:
-	@docker run -p 1234:80 -v $$PWD/dist:/dist lewislbr/gss:latest
+	@docker run -p 1234:80 -v $$PWD/web/dist:/dist lewislbr/gss:test

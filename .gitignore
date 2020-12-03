@@ -1,2 +1,6 @@
 # macOS files
 .DS_Store
+
+# web files
+.cache
+node_modules
