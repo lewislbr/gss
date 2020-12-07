@@ -1,7 +1,9 @@
 .dockerignore
 .DS_Store
+.github
 .gitignore
 Dockerfile
 LICENSE
 Makefile
 README.md
+web
