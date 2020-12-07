@@ -17,7 +17,7 @@ GSS works as a Docker image. By default it serves a directory in the container n
 With the CLI:
 
 ```sh
-docker run -p [port you want to use]:[container port] -v [absolute path to SPA build folder]:/[container folder] lewislbr/gss [flags]
+docker run -p [port you want to use]:[container port] -v [absolute path to SPA build folder]:/[container folder] lewislbr/gss [options]
 ```
 
 > Example:
@@ -32,12 +32,12 @@ With a custom image:
 FROM lewislbr/gss:latest
 COPY [path to SPA build folder] ./[container folder]
 # Optional:
-CMD [flags]
+CMD [options]
 ```
 
 ```sh
 docker build -t [image-name] .
-docker run -p [port you want to use]:[container port] [image-name] [flags]
+docker run -p [port you want to use]:[container port] [image-name] [options]
 ```
 
 > Example:
@@ -54,7 +54,7 @@ docker run -p [port you want to use]:[container port] [image-name] [flags]
 
 ## Configuration
 
-You can configure the server with CLI flags defined after the image name when using the Docker CLI, or in a `CMD` statement in a custom Dockerfile.
+You can configure the server with CLI options defined after the image name when using the Docker CLI, or in a `CMD` statement if using a custom Dockerfile.
 
 ### `-d`
 
