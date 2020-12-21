@@ -36,7 +36,9 @@ func start() error {
 
 // setUpCLI enables configuration via CLI
 func setUpCLI() {
-	flag.StringVar(&dir, "d", "dist", "Container path to the directory to serve.")
+	flag.StringVar(
+		&dir, "d", "dist", "Container path to the directory to serve.",
+	)
 	flag.StringVar(&port, "p", "80", "Port where to run the server.")
 	flag.Parse()
 }
