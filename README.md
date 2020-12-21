@@ -5,6 +5,7 @@ GSS (Go serve SPA) is a web server for single-page applications written in Go us
 ## Features
 
 - Optimized for single-page apps.
+- Automatically serves pre-compressed brotli and gzip files if available.
 - Lightweight.
 - Portable.
 - Configurable via CLI.

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -55,7 +56,9 @@ func customHTTPServer(port string, h http.Handler) *http.Server {
 }
 
 // serveSPA serves files from a directory, defaulting to the index if the root
-// is requested or a file is not found, leaving it for the SPA to handle
+// is requested or a file is not found, leaving it for the SPA to handle. If
+// the directory contains pre-compressed brotli or gzip files those are served
+// instead for the file types that accept them.
 func serveSPA(dir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqFile := filepath.Join(dir, filepath.Clean(r.URL.Path))
@@ -67,7 +70,49 @@ func serveSPA(dir string) http.HandlerFunc {
 			reqFile = filepath.Join(dir, "index.html")
 		}
 
-		http.ServeFile(w, r, reqFile)
+		brotli := "br"
+		brotliExt := ".br"
+		gzip := "gzip"
+		gzipExt := ".gz"
+		brotliFiles, err := filepath.Glob(dir + "/*" + brotliExt)
+		if err != nil {
+			fmt.Println(err)
+		}
+		gzipFiles, err := filepath.Glob(dir + "/*" + gzipExt)
+		if err != nil {
+			fmt.Println(err)
+		}
+		acceptedEncodings := r.Header.Get("Accept-Encoding")
+		serveCompressedFile := func(encoding string, extension string) {
+			serve := func(encoding string, mimeType string, extension string) {
+				w.Header().Add("Content-Encoding", encoding)
+				w.Header().Add("Content-Type", mimeType)
+				http.ServeFile(w, r, reqFile+extension)
+			}
+
+			switch filepath.Ext(reqFile) {
+			case ".html":
+				serve(encoding, "text/html", extension)
+			case ".css":
+				serve(encoding, "text/css", extension)
+			case ".js":
+				serve(encoding, "application/javascript", extension)
+			case ".svg":
+				serve(encoding, "image/svg+xml", extension)
+			default:
+				http.ServeFile(w, r, reqFile)
+			}
+		}
+
+		if len(brotliFiles) > 0 && strings.Contains(acceptedEncodings, brotli) {
+			serveCompressedFile(brotli, brotliExt)
+		} else if len(gzipFiles) > 0 && strings.Contains(
+			acceptedEncodings, gzip,
+		) {
+			serveCompressedFile(gzip, gzipExt)
+		} else {
+			http.ServeFile(w, r, reqFile)
+		}
 	}
 }
 
