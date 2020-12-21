@@ -3,7 +3,7 @@ name: Main
 on:
   push:
     tags:
-      - "*.*.*"
+      - "*"
   workflow_dispatch:
 
 env:
