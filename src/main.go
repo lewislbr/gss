@@ -37,9 +37,7 @@ func start() error {
 
 // setUpCLI enables configuration via CLI
 func setUpCLI() {
-	flag.StringVar(
-		&dir, "d", "dist", "Container path to the directory to serve.",
-	)
+	flag.StringVar(&dir, "d", "dist", "Container path to the directory to serve.")
 	flag.StringVar(&port, "p", "80", "Port where to run the server.")
 	flag.Parse()
 }
@@ -87,6 +85,7 @@ func serveSPA(dir string) http.HandlerFunc {
 			serve := func(encoding string, mimeType string, extension string) {
 				w.Header().Add("Content-Encoding", encoding)
 				w.Header().Add("Content-Type", mimeType)
+
 				http.ServeFile(w, r, reqFile+extension)
 			}
 
@@ -106,9 +105,7 @@ func serveSPA(dir string) http.HandlerFunc {
 
 		if len(brotliFiles) > 0 && strings.Contains(acceptedEncodings, brotli) {
 			serveCompressedFile(brotli, brotliExt)
-		} else if len(gzipFiles) > 0 && strings.Contains(
-			acceptedEncodings, gzip,
-		) {
+		} else if len(gzipFiles) > 0 && strings.Contains(acceptedEncodings, gzip) {
 			serveCompressedFile(gzip, gzipExt)
 		} else {
 			http.ServeFile(w, r, reqFile)
