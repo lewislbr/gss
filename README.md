@@ -81,3 +81,7 @@ Default: `80`.
 > ```sh
 > docker run -p 1234:3000 -v $PWD/public:/dist lewislbr/gss -p 3000
 > ```
+
+## Contributing
+
+This project started as a way to learn and to solve a need I had. If you think it can be improved in any way, you are very welcome to contribute!
