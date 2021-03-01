@@ -2,44 +2,116 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
-var dir, port string
+var dir = "dist"
+var port = "80"
 
-func main() {
-	if err := start(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
-		os.Exit(1)
-	}
+type configYAML struct {
+	Dir  string `yaml:"directory,omitempty"`
+	Port string `yaml:"port,omitempty"`
 }
 
-// start initializes the server
-func start() error {
+func main() {
+	setUpYAML()
 	setUpCLI()
 
+	// Check if the directory to serve exists
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		log.Fatalf("Error: directory %q not found ❌", dir)
+	}
+
+	startServer()
+}
+
+// startServer initializes the server.
+func startServer() {
 	httpServer := customHTTPServer(port, addHeaders(serveSPA(dir)))
 
-	fmt.Println("GSS ready ✅")
+	log.Printf("GSS serving directory %q on port %v ✅\n", dir, port)
 
 	err := httpServer.ListenAndServe()
 	if err != nil {
-		return err
+		log.Fatalf("Error: the server crashed: %v ❌", err)
 	}
-
-	return nil
 }
 
-// setUpCLI enables configuration via CLI
+// setUpYAML enables configuration via YAML file.
+func setUpYAML() {
+	config := configYAML{}
+	configFile := "gss.yaml"
+
+	// Check if there is a config file
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		log.Println("Info: no YAML config found ℹ️")
+
+		return
+	}
+
+	// Read the file
+	content, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		log.Fatalf("Error: the YAML file could not be read: %v ❌", err)
+
+		return
+	}
+
+	// Serialize the YAML content
+	err = yaml.Unmarshal([]byte(content), &config)
+	if err != nil {
+		log.Fatalf("Error: the YAML file content could not be processed: %v ❌", err)
+
+		return
+	}
+
+	// Check if values are empty
+	if config.Dir == "" || config.Port == "" {
+		log.Println("Warning: some YAML config values are empty ⚠️")
+	}
+
+	// Assign non-empty values
+	if config.Dir != "" {
+		dir = config.Dir
+	}
+	if config.Port != "" {
+		port = config.Port
+	}
+
+	log.Println("Info: using YAML config ℹ️")
+}
+
+// setUpCLI enables configuration via CLI flags.
 func setUpCLI() {
-	flag.StringVar(&dir, "d", "dist", "Container path to the directory to serve.")
-	flag.StringVar(&port, "p", "80", "Port where to run the server.")
+	d := flag.String("d", dir, "Path to the directory to serve.")
+	p := flag.String("p", port, "Port where to run the server.")
+
 	flag.Parse()
+
+	// Check if flags are set up
+	if *d == dir && *p == port {
+		log.Println("Info: no CLI flags set up ℹ️")
+
+		return
+	}
+
+	// Assign non-empty values
+	if *d != "" {
+		dir = *d
+	}
+	if *p != "" {
+		port = *p
+	}
+
+	log.Println("Info: using CLI flags ℹ️")
 }
 
 // customHTTPServer configures a basic HTTP server
@@ -74,11 +146,11 @@ func serveSPA(dir string) http.HandlerFunc {
 		gzipExt := ".gz"
 		brotliFiles, err := filepath.Glob(dir + "/*" + brotliExt)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 		gzipFiles, err := filepath.Glob(dir + "/*" + gzipExt)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 		acceptedEncodings := r.Header.Get("Accept-Encoding")
 		serveCompressedFile := func(encoding string, extension string) {

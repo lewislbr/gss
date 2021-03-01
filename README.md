@@ -7,56 +7,59 @@ GSS (Go serve SPA) is a web server for single-page applications written in Go us
 - Optimized for single-page apps.
 - Automatically serves pre-compressed brotli and gzip files if available.
 - Docker-based.
+- Configurable via YAML.
 - Configurable via CLI.
 - Lightweight.
 
 ## Usage
 
-GSS works as a Docker image. By default it serves a directory in the container named `dist` at port `80`, but you can change this values or mount any folder and publish the container at any port.
-
-With the CLI:
+GSS works as a Docker image.
 
 ```sh
-docker run -p [port you want to use]:[container port] -v [absolute path to SPA build folder]:/[container folder] lewislbr/gss [options]
+docker run -p [container-port]:80 -v [spa-folder]:/dist lewislbr/gss
+```
+
+By default it serves a directory in the container named `dist` at port `80`, but you can change this values via YAML file or CLI flags.
+
+With YAML file (name must be `gss.yaml`):
+
+```yaml
+directory: [spa-folder]
+port: [server-port]
+```
+
+```sh
+docker run -p [container-port]:[server-port] -v [yaml-file]:/gss.yaml -v [spa-folder]:/[container-folder] lewislbr/gss
+```
+
+> Example:
+>
+> ```yaml
+> directory: public
+> port: 7892
+> ```
+>
+> ```sh
+> docker run -p 8080:7892 -v $PWD/gss.yaml:/gss.yaml -v $PWD/web/dist:/public lewislbr/gss:test
+> ```
+
+With CLI:
+
+```sh
+docker run -p [container-port]:[server-port] -v [spa-folder]:/[container-folder] lewislbr/gss [options]
 ```
 
 > Example:
 >
 > ```sh
-> docker run -p 1234:80 -v $PWD/public:/dist lewislbr/gss
+> docker run -p 8080:7891 -v $PWD/public:/dist lewislbr/gss -d public -p 7891
 > ```
 
-With a custom image:
+If both a YAML config and a CLI flag set up a configuration option, the CLI flag prevails.
 
-```dockerfile
-FROM lewislbr/gss:latest
-COPY [path to SPA build folder] ./[container folder]
-# Optional:
-CMD [options]
-```
+## Configuration options
 
-```sh
-docker build -t [image-name] .
-docker run -p [port you want to use]:[container port] [image-name] [options]
-```
-
-> Example:
->
-> ```dockerfile
-> FROM lewislbr/gss:latest
-> COPY public ./dist
-> ```
->
-> ```sh
-> docker build -t test-app .
-> docker run -p 1234:80 test-app
-> ```
-
-## Configuration
-
-You can configure the server with CLI options defined after the image name when using the Docker CLI, or in a `CMD` statement if using a custom Dockerfile.
-
-### `-d`
+### `-d` (CLI), `directory` (YAML)
 
 Container path to the directory to serve.
 
@@ -64,22 +67,36 @@ Default: `dist`.
 
 > Example:
 >
+> YAML:
+>
+> ```yaml
+> directory: public
+> ```
+>
+> CLI:
+>
 > ```sh
-> docker run -p 1234:80 -v $PWD/public:/static-content lewislbr/gss -d static-content
+> docker run -p 8080:80 -v $PWD/public:/public lewislbr/gss -d public
 > ```
 
-### `-p`
+### `-p` (CLI), `port` (YAML)
 
 Port where to run the server.
 
 Default: `80`.
 
-> Please note that this value should be the same as the container port.
-
 > Example:
 >
+> YAML:
+>
+> ```yaml
+> port: 7892
+> ```
+>
+> CLI:
+>
 > ```sh
-> docker run -p 1234:3000 -v $PWD/public:/dist lewislbr/gss -p 3000
+> docker run -p 8080:7892 -v $PWD/public:/dist lewislbr/gss -p 7892
 > ```
 
 ## Contributing
