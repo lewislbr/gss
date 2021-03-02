@@ -31,7 +31,7 @@ func main() {
 
 	// Check if the directory to serve exists
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		log.Fatalf("Error: directory %q not found ❌", dir)
+		log.Fatalf("GSS error: directory %q not found ❌", dir)
 	}
 
 	startServer()
@@ -41,11 +41,11 @@ func main() {
 func startServer() {
 	httpServer := customHTTPServer(port, addHeaders(serveSPA(dir)))
 
-	log.Printf("GSS serving directory %q on port %v ✅\n", dir, port)
+	log.Printf("GSS success: serving directory %q on port %v ✅\n", dir, port)
 
 	err := httpServer.ListenAndServe()
 	if err != nil {
-		log.Fatalf("Error: the server crashed: %v ❌", err)
+		log.Fatalf("GSS error: the server crashed: %v ❌", err)
 	}
 }
 
@@ -55,7 +55,7 @@ func setUpYAML() {
 
 	// Check if there is a config file
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
-		log.Println("Info: no YAML config found ℹ️")
+		log.Println("GSS info: no YAML config found ℹ️")
 
 		return
 	}
@@ -63,7 +63,7 @@ func setUpYAML() {
 	// Read the file
 	content, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		log.Fatalf("Error: the YAML file could not be read: %v ❌", err)
+		log.Fatalf("GSS error: the YAML file could not be read: %v ❌", err)
 
 		return
 	}
@@ -73,14 +73,14 @@ func setUpYAML() {
 	// Serialize the YAML content
 	err = yaml.Unmarshal([]byte(content), &config)
 	if err != nil {
-		log.Fatalf("Error: the YAML file content could not be processed: %v ❌", err)
+		log.Fatalf("GSS error: the YAML file content could not be processed: %v ❌", err)
 
 		return
 	}
 
 	// Check if values are empty
 	if config.Dir == "" || len(config.Headers) == 0 || config.Port == "" {
-		log.Println("Warning: some YAML config values are empty ⚠️")
+		log.Println("GSS warning: some YAML config values are empty ⚠️")
 	}
 
 	// Assign non-empty values
@@ -94,7 +94,7 @@ func setUpYAML() {
 		port = config.Port
 	}
 
-	log.Println("Info: using YAML config ℹ️")
+	log.Println("GSS info: using YAML config ℹ️")
 }
 
 // setUpCLI enables configuration via CLI flags.
@@ -106,7 +106,7 @@ func setUpCLI() {
 
 	// Check if flags are set up
 	if *d == dir && *p == port {
-		log.Println("Info: no CLI flags set up ℹ️")
+		log.Println("GSS info: no CLI flags set up ℹ️")
 
 		return
 	}
@@ -119,7 +119,7 @@ func setUpCLI() {
 		port = *p
 	}
 
-	log.Println("Info: using CLI flags ℹ️")
+	log.Println("GSS info: using CLI flags ℹ️")
 }
 
 // customHTTPServer configures a basic HTTP server
