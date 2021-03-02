@@ -30,7 +30,7 @@ func main() {
 
 	// Check if the directory to serve exists
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		log.Fatalf("GSS error: directory %q not found ❌", dir)
+		log.Fatalf("GSS error: directory %q not found ❌\n", dir)
 	}
 
 	startServer()
@@ -44,7 +44,7 @@ func startServer() {
 
 	err := httpServer.ListenAndServe()
 	if err != nil {
-		log.Fatalf("GSS error: the server crashed: %v ❌", err)
+		log.Fatalf("GSS error: the server crashed: %v ❌\n", err)
 	}
 }
 
@@ -62,7 +62,7 @@ func setUpYAML() {
 	// Read the file
 	content, err := os.ReadFile(configFile)
 	if err != nil {
-		log.Fatalf("GSS error: the YAML file could not be read: %v ❌", err)
+		log.Fatalf("GSS error: the YAML file could not be read: %v ❌\n", err)
 
 		return
 	}
@@ -72,7 +72,7 @@ func setUpYAML() {
 	// Serialize the YAML content
 	err = yaml.Unmarshal([]byte(content), &config)
 	if err != nil {
-		log.Fatalf("GSS error: the YAML file content could not be processed: %v ❌", err)
+		log.Fatalf("GSS error: the YAML file content could not be processed: %v ❌\n", err)
 
 		return
 	}
