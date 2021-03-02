@@ -13,12 +13,16 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var dir = "dist"
-var port = "80"
+var (
+	dir     = "dist"
+	headers = map[string]string{}
+	port    = "80"
+)
 
 type configYAML struct {
-	Dir  string `yaml:"directory,omitempty"`
-	Port string `yaml:"port,omitempty"`
+	Dir     string            `yaml:"directory,omitempty"`
+	Headers map[string]string `yaml:"headers,omitempty"`
+	Port    string            `yaml:"port,omitempty"`
 }
 
 func main() {
@@ -47,7 +51,6 @@ func startServer() {
 
 // setUpYAML enables configuration via YAML file.
 func setUpYAML() {
-	config := configYAML{}
 	configFile := "gss.yaml"
 
 	// Check if there is a config file
@@ -65,6 +68,8 @@ func setUpYAML() {
 		return
 	}
 
+	config := configYAML{}
+
 	// Serialize the YAML content
 	err = yaml.Unmarshal([]byte(content), &config)
 	if err != nil {
@@ -74,13 +79,16 @@ func setUpYAML() {
 	}
 
 	// Check if values are empty
-	if config.Dir == "" || config.Port == "" {
+	if config.Dir == "" || len(config.Headers) == 0 || config.Port == "" {
 		log.Println("Warning: some YAML config values are empty ⚠️")
 	}
 
 	// Assign non-empty values
 	if config.Dir != "" {
 		dir = config.Dir
+	}
+	if len(config.Headers) != 0 {
+		headers = config.Headers
 	}
 	if config.Port != "" {
 		port = config.Port
@@ -189,6 +197,10 @@ func serveSPA(dir string) http.HandlerFunc {
 func addHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Server", "GSS")
+
+		for k, v := range headers {
+			w.Header().Add(k, v)
+		}
 
 		h.ServeHTTP(w, r)
 	}

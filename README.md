@@ -79,6 +79,22 @@ Default: `dist`.
 > docker run -p 8080:80 -v $PWD/public:/public lewislbr/gss -d public
 > ```
 
+### `headers` (YAML)
+
+Headers to add to the response.
+
+Default: `Server: GSS`.
+
+> Example:
+>
+> YAML:
+>
+> ```yaml
+> headers:
+>   Referrer-Policy: "strict-origin-when-cross-origin"
+>   Strict-Transport-Security: "max-age=63072000; includeSubDomains; preload"
+> ```
+
 ### `-p` (CLI), `port` (YAML)
 
 Port where to run the server.
