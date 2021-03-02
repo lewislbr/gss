@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -61,7 +60,7 @@ func setUpYAML() {
 	}
 
 	// Read the file
-	content, err := ioutil.ReadFile(configFile)
+	content, err := os.ReadFile(configFile)
 	if err != nil {
 		log.Fatalf("GSS error: the YAML file could not be read: %v ❌", err)
 
