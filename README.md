@@ -1,6 +1,6 @@
 # GSS
 
-GSS (Go serve SPA) is a web server for single-page applications written in Go using the standard library.
+GSS (Go serve SPA) is a web server for single-page applications written in Go.
 
 ## Features
 
