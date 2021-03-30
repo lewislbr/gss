@@ -1,11 +1,11 @@
 FROM golang:1-alpine AS build
-ENV GO111MODULE=on \
-    CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=amd64
+ENV CGO_ENABLED=0 \
+    GO111MODULE=on \
+    GOARCH=amd64 \
+    GOOS=linux
 WORKDIR /
 COPY . ./
-RUN go build -o gss -ldflags="-s -w" src/main.go
+RUN go build -o gss -ldflags="-s -w" gss.go
 
 FROM scratch
 COPY --from=build /gss ./

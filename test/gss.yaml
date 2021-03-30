@@ -2,4 +2,4 @@ directory: public
 headers:
   Referrer-Policy: "strict-origin-when-cross-origin"
   Strict-Transport-Security: "max-age=63072000; includeSubDomains; preload"
-port: 7892
+port: 8081

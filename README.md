@@ -36,11 +36,11 @@ docker run -p [container-port]:[server-port] -v [yaml-file]:/gss.yaml -v [spa-fo
 >
 > ```yaml
 > directory: public
-> port: 7892
+> port: 8080
 > ```
 >
 > ```sh
-> docker run -p 8080:7892 -v $PWD/gss.yaml:/gss.yaml -v $PWD/web/dist:/public lewislbr/gss:test
+> docker run -p 8080:8080 -v $PWD/gss.yaml:/gss.yaml -v $PWD/web/dist:/public lewislbr/gss:test
 > ```
 
 With CLI:
@@ -52,7 +52,7 @@ docker run -p [container-port]:[server-port] -v [spa-folder]:/[container-folder]
 > Example:
 >
 > ```sh
-> docker run -p 8080:7891 -v $PWD/public:/dist lewislbr/gss -d public -p 7891
+> docker run -p 8080:8080 -v $PWD/public:/dist lewislbr/gss -d public -p 8080
 > ```
 
 If both a YAML config and a CLI flag set up a configuration option, the CLI flag prevails.
@@ -106,13 +106,13 @@ Default: `80`.
 > YAML:
 >
 > ```yaml
-> port: 7892
+> port: 8080
 > ```
 >
 > CLI:
 >
 > ```sh
-> docker run -p 8080:7892 -v $PWD/public:/dist lewislbr/gss -p 7892
+> docker run -p 8080:8080 -v $PWD/public:/dist lewislbr/gss -p 8080
 > ```
 
 ## Contributing

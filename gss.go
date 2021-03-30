@@ -43,21 +43,7 @@ func main() {
 	}
 }
 
-// startServer initializes the server.
-func startServer() error {
-	httpServer := customHTTPServer(port, addHeaders(serveSPA(dir)))
-
-	log.Printf("GSS info: serving directory %q on port %v ✅\n", dir, port)
-
-	err := httpServer.ListenAndServe()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// setUpYAML enables configuration via YAML file.
+// Enable configuration via YAML file.
 func setUpYAML() error {
 	configFile := "gss.yaml"
 
@@ -99,7 +85,7 @@ func setUpYAML() error {
 	return nil
 }
 
-// setUpCLI enables configuration via CLI flags.
+// Enable configuration via CLI flags.
 func setUpCLI() {
 	d := flag.String("d", dir, "Path to the directory to serve.")
 	p := flag.String("p", port, "Port where to run the server.")
@@ -120,18 +106,27 @@ func setUpCLI() {
 	}
 }
 
-// customHTTPServer configures a basic HTTP server
-func customHTTPServer(port string, h http.Handler) *http.Server {
+// Initialize the server.
+func startServer() error {
+	s := setUpServer(port)
+
+	log.Printf("GSS info: serving directory %q on port %v ✅\n", dir, port)
+
+	return s.ListenAndServe()
+}
+
+// Configure a basic HTTP server.
+func setUpServer(port string) *http.Server {
 	return &http.Server{
 		Addr:         ":" + port,
-		Handler:      h,
+		Handler:      addHeaders(serveSPA(dir)),
 		IdleTimeout:  120 * time.Second,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 }
 
-// serveSPA serves files from a directory, defaulting to the index if the root
+// Serve files from a directory, defaulting to the index if the root
 // is requested or a file is not found, leaving it for the SPA to handle. If
 // the directory contains pre-compressed brotli or gzip files those are served
 // instead for the file types that accept them.
@@ -191,7 +186,7 @@ func serveSPA(dir string) http.HandlerFunc {
 	}
 }
 
-// addHeaders adds custom headers to the response
+// Add custom headers to the response.
 func addHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Server", "GSS")
