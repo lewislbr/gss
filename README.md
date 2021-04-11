@@ -40,7 +40,7 @@ docker run -p [container-port]:[server-port] -v [yaml-file]:/gss.yaml -v [spa-fo
 > ```
 >
 > ```sh
-> docker run -p 8080:8080 -v $PWD/gss.yaml:/gss.yaml -v $PWD/web/dist:/public lewislbr/gss:test
+> docker run -p 8080:8080 -v $PWD/gss.yaml:/gss.yaml -v $PWD/web/dist:/public lewislbr/gss
 > ```
 
 With CLI:
@@ -67,16 +67,16 @@ Default: `dist`.
 
 > Example:
 >
-> YAML:
->
-> ```yaml
-> directory: public
-> ```
->
 > CLI:
 >
 > ```sh
 > docker run -p 8080:80 -v $PWD/public:/public lewislbr/gss -d public
+> ```
+>
+> YAML:
+>
+> ```yaml
+> directory: public
 > ```
 
 ### `headers` (YAML)
@@ -103,16 +103,16 @@ Default: `80`.
 
 > Example:
 >
-> YAML:
->
-> ```yaml
-> port: 8080
-> ```
->
 > CLI:
 >
 > ```sh
 > docker run -p 8080:8080 -v $PWD/public:/dist lewislbr/gss -p 8080
+> ```
+>
+> YAML:
+>
+> ```yaml
+> port: 8080
 > ```
 
 ## Contributing
