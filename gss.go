@@ -66,11 +66,6 @@ func setUpYAML() error {
 		return err
 	}
 
-	// Check if values are empty
-	if config.Dir == "" || len(config.Headers) == 0 || config.Port == "" {
-		log.Println("GSS warning: some YAML config values are empty ⚠️")
-	}
-
 	// Assign non-empty values
 	if config.Dir != "" {
 		dir = config.Dir
@@ -91,11 +86,6 @@ func setUpCLI() {
 	p := flag.String("p", port, "Port where to run the server.")
 
 	flag.Parse()
-
-	// Check if flags are set up
-	if *d == dir && *p == port {
-		return
-	}
 
 	// Assign non-empty values
 	if *d != "" {
