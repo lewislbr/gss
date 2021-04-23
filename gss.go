@@ -116,34 +116,29 @@ func setUpServer(port string) *http.Server {
 	}
 }
 
-// Serve files from a directory, defaulting to the index if the root
-// is requested or a file is not found, leaving it for the SPA to handle. If
-// the directory contains pre-compressed brotli or gzip files those are served
-// instead for the file types that accept them.
+// Serve static files from a directory.
 func serveSPA(dir string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqFile := filepath.Join(dir, filepath.Clean(r.URL.Path))
 
+		// Send the index if the root path is requested.
 		if filepath.Clean(r.URL.Path) == "/" {
 			reqFile = reqFile + "/index.html"
 		}
+
+		// Send a 404 if a file with extension is not found, and the index if it has no extension,
+		// as it will likely be a SPA route.
 		if _, err := os.Stat(reqFile); os.IsNotExist(err) {
+			if filepath.Ext(reqFile) != "" {
+				w.WriteHeader(http.StatusNotFound)
+
+				return
+			}
+
 			reqFile = filepath.Join(dir, "index.html")
 		}
 
-		brotli := "br"
-		brotliExt := ".br"
-		gzip := "gzip"
-		gzipExt := ".gz"
-		brotliFiles, err := filepath.Glob(dir + "/*" + brotliExt)
-		if err != nil {
-			log.Println(err)
-		}
-		gzipFiles, err := filepath.Glob(dir + "/*" + gzipExt)
-		if err != nil {
-			log.Println(err)
-		}
-		acceptedEncodings := r.Header.Get("Accept-Encoding")
+		// Serve pre-compressed file with appropriate headers and extension.
 		serveCompressedFile := func(encoding string, extension string) {
 			serve := func(encoding string, mimeType string, extension string) {
 				w.Header().Add("Content-Encoding", encoding)
@@ -166,13 +161,43 @@ func serveSPA(dir string) http.HandlerFunc {
 			}
 		}
 
-		if len(brotliFiles) > 0 && strings.Contains(acceptedEncodings, brotli) {
-			serveCompressedFile(brotli, brotliExt)
-		} else if len(gzipFiles) > 0 && strings.Contains(acceptedEncodings, gzip) {
-			serveCompressedFile(gzip, gzipExt)
-		} else {
-			http.ServeFile(w, r, reqFile)
+		acceptedEncodings := r.Header.Get("Accept-Encoding")
+		files, err := filepath.Glob(dir + "/*")
+		if err != nil {
+			log.Println(err)
 		}
+
+		brotli := "br"
+		brotliExt := ".br"
+
+		// If the request accepts brotli, and the directory contains brotli files, serve them.
+		if strings.Contains(acceptedEncodings, brotli) {
+			for _, f := range files {
+				if f == reqFile+brotliExt {
+					serveCompressedFile(brotli, brotliExt)
+
+					return
+				}
+			}
+		}
+
+		gzip := "gzip"
+		gzipExt := ".gz"
+
+		// If the request accepts gzip, and the directory contains gzip files, serve them.
+		if strings.Contains(acceptedEncodings, gzip) {
+			for _, f := range files {
+				if f == reqFile+gzipExt {
+					serveCompressedFile(gzip, gzipExt)
+
+					return
+				}
+			}
+		}
+
+		// If the request does not accept compressed files, or the directory does not contain compressed files,
+		// serve the file as is.
+		http.ServeFile(w, r, reqFile)
 	}
 }
 
