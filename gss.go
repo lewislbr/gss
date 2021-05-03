@@ -98,7 +98,7 @@ func setUpCLI() {
 
 // Initialize the server.
 func startServer() error {
-	s := setUpServer(port)
+	s := setUpServer()
 
 	log.Printf("GSS info: serving directory %q on port %v ✅\n", dir, port)
 
@@ -106,7 +106,7 @@ func startServer() error {
 }
 
 // Configure a basic HTTP server.
-func setUpServer(port string) *http.Server {
+func setUpServer() *http.Server {
 	return &http.Server{
 		Addr:         ":" + port,
 		Handler:      addHeaders(serveSPA(dir)),
@@ -139,8 +139,8 @@ func serveSPA(dir string) http.HandlerFunc {
 		}
 
 		// Serve pre-compressed file with appropriate headers and extension.
-		serveCompressedFile := func(encoding string, extension string) {
-			serve := func(encoding string, mimeType string, extension string) {
+		serveCompressedFile := func(encoding, extension string) {
+			serve := func(mimeType string) {
 				w.Header().Add("Content-Encoding", encoding)
 				w.Header().Add("Content-Type", mimeType)
 
@@ -149,13 +149,13 @@ func serveSPA(dir string) http.HandlerFunc {
 
 			switch filepath.Ext(reqFile) {
 			case ".html":
-				serve(encoding, "text/html", extension)
+				serve("text/html")
 			case ".css":
-				serve(encoding, "text/css", extension)
+				serve("text/css")
 			case ".js":
-				serve(encoding, "application/javascript", extension)
+				serve("application/javascript")
 			case ".svg":
-				serve(encoding, "image/svg+xml", extension)
+				serve("image/svg+xml")
 			default:
 				http.ServeFile(w, r, reqFile)
 			}
