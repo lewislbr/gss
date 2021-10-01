@@ -2,13 +2,15 @@ package main
 
 import (
 	"flag"
-	"log"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
 )
 
@@ -25,22 +27,33 @@ type configYAML struct {
 }
 
 func main() {
+	setUpLogger()
+
 	err := setUpYAML()
 	if err != nil {
-		log.Fatalf("GSS error: something went wrong with the YAML file: %v ❌\n", err)
+		log.Fatal().Msgf("Error retrieving YAML config: %v", err)
 	}
 
 	setUpCLI()
 
 	// Check if the directory to serve exists
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		log.Fatalf("GSS error: directory %q not found ❌\n", dir)
+		log.Fatal().Msgf("Directory %q not found", dir)
 	}
 
 	err = startServer()
 	if err != nil {
-		log.Fatalf("GSS error: the server crashed: %v ❌\n", err)
+		log.Fatal().Msgf("Error starting server: %v", err)
 	}
+}
+
+func setUpLogger() {
+	zerolog.TimestampFunc = func() time.Time {
+		return time.Now().UTC()
+	}
+	zerolog.TimeFieldFormat = time.RFC3339Nano
+	log.Logger = log.With().Caller().Logger()
+	log.Logger = log.With().Str("app", "GSS").Logger()
 }
 
 // Enable configuration via YAML file.
@@ -55,7 +68,7 @@ func setUpYAML() error {
 	// Read the file
 	content, err := os.ReadFile(configFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading YAML file: %w", err)
 	}
 
 	config := configYAML{}
@@ -63,7 +76,7 @@ func setUpYAML() error {
 	// Serialize the YAML content
 	err = yaml.Unmarshal([]byte(content), &config)
 	if err != nil {
-		return err
+		return fmt.Errorf("unmarshaling YAML file: %w", err)
 	}
 
 	// Assign non-empty values
@@ -100,7 +113,7 @@ func setUpCLI() {
 func startServer() error {
 	s := setUpServer()
 
-	log.Printf("GSS info: serving directory %q on port %v ✅\n", dir, port)
+	log.Info().Msgf("Serving directory %q on port %v", dir, port)
 
 	return s.ListenAndServe()
 }
@@ -164,7 +177,7 @@ func serveSPA(dir string) http.HandlerFunc {
 		acceptedEncodings := r.Header.Get("Accept-Encoding")
 		files, err := filepath.Glob(dir + "/*")
 		if err != nil {
-			log.Println(err)
+			log.Error().Msgf("Error getting files to serve: %v", err)
 		}
 
 		brotli := "br"
