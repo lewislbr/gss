@@ -132,7 +132,7 @@ func (a *App) ServeSPA() http.HandlerFunc {
 
 		// Send the index if the root path is requested.
 		if filepath.Clean(r.URL.Path) == "/" {
-			reqFile = reqFile + "/index.html"
+			reqFile = filepath.Join(a.Config.Dir, "index.html")
 		}
 
 		// Send a 404 if a file with extension is not found, and the index if it has no extension,

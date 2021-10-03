@@ -15,8 +15,11 @@ func TestGSS(t *testing.T) {
 		config := &Config{
 			Dir: "test/web/dist",
 		}
-		app := NewApp(config)
-		app.Server.Handler = app.AddHeaders((app.ServeSPA()))
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
+		app := NewApp(config).Init()
 
 		require.Equal(t, "test/web/dist", app.Config.Dir)
 	})
@@ -28,8 +31,11 @@ func TestGSS(t *testing.T) {
 			Dir:  "test/web/dist",
 			Port: "8080",
 		}
-		app := NewApp(config)
-		app.Server.Handler = app.AddHeaders((app.ServeSPA()))
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
+		app := NewApp(config).Init()
 
 		require.Equal(t, ":8080", app.Server.Addr)
 	})
@@ -43,6 +49,10 @@ func TestGSS(t *testing.T) {
 				"X-Test": "test",
 			},
 		}
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
 		app := NewApp(config).Init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -58,6 +68,10 @@ func TestGSS(t *testing.T) {
 		config := &Config{
 			Dir: "test/web/dist",
 		}
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
 		app := NewApp(config).Init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/index.html", nil)
@@ -73,6 +87,10 @@ func TestGSS(t *testing.T) {
 		config := &Config{
 			Dir: "test/web/dist",
 		}
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
 		app := NewApp(config).Init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -84,29 +102,16 @@ func TestGSS(t *testing.T) {
 		require.Contains(t, w.Header().Get("Content-Type"), "html")
 	})
 
-	t.Run("serves JavaScript files succesfully", func(t *testing.T) {
-		t.Parallel()
-
-		config := &Config{
-			Dir: "test/web/dist",
-		}
-		app := NewApp(config).Init()
-		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, "/main.js", nil)
-
-		app.Server.Handler.ServeHTTP(w, r)
-
-		require.Equal(t, http.StatusOK, w.Result().StatusCode)
-		require.Equal(t, "/main.js", r.RequestURI)
-		require.Contains(t, w.Header().Get("Content-Type"), "javascript")
-	})
-
 	t.Run("serves CSS files succesfully", func(t *testing.T) {
 		t.Parallel()
 
 		config := &Config{
 			Dir: "test/web/dist",
 		}
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
 		app := NewApp(config).Init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/main.css", nil)
@@ -118,12 +123,37 @@ func TestGSS(t *testing.T) {
 		require.Contains(t, w.Header().Get("Content-Type"), "css")
 	})
 
+	t.Run("serves JavaScript files succesfully", func(t *testing.T) {
+		t.Parallel()
+
+		config := &Config{
+			Dir: "test/web/dist",
+		}
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
+		app := NewApp(config).Init()
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest(http.MethodGet, "/main.js", nil)
+
+		app.Server.Handler.ServeHTTP(w, r)
+
+		require.Equal(t, http.StatusOK, w.Result().StatusCode)
+		require.Equal(t, "/main.js", r.RequestURI)
+		require.Contains(t, w.Header().Get("Content-Type"), "javascript")
+	})
+
 	t.Run("serves other files succesfully", func(t *testing.T) {
 		t.Parallel()
 
 		config := &Config{
 			Dir: "test/web/dist",
 		}
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
 		app := NewApp(config).Init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/main.js.LICENSE.txt", nil)
@@ -134,30 +164,16 @@ func TestGSS(t *testing.T) {
 		require.Equal(t, "/main.js.LICENSE.txt", r.RequestURI)
 	})
 
-	t.Run("serves gzip files succesfully", func(t *testing.T) {
-		t.Parallel()
-
-		config := &Config{
-			Dir: "test/web/dist",
-		}
-		app := NewApp(config).Init()
-		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, "/main.js", nil)
-
-		r.Header.Add("Accept-Encoding", "gzip")
-
-		app.Server.Handler.ServeHTTP(w, r)
-
-		require.Equal(t, http.StatusOK, w.Result().StatusCode)
-		require.Equal(t, "gzip", w.Header().Get("Content-Encoding"))
-	})
-
 	t.Run("serves brotli files succesfully", func(t *testing.T) {
 		t.Parallel()
 
 		config := &Config{
 			Dir: "test/web/dist",
 		}
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
 		app := NewApp(config).Init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/main.js", nil)
@@ -170,12 +186,38 @@ func TestGSS(t *testing.T) {
 		require.Equal(t, "br", w.Header().Get("Content-Encoding"))
 	})
 
+	t.Run("serves gzip files succesfully", func(t *testing.T) {
+		t.Parallel()
+
+		config := &Config{
+			Dir: "test/web/dist",
+		}
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
+		app := NewApp(config).Init()
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest(http.MethodGet, "/main.js", nil)
+
+		r.Header.Add("Accept-Encoding", "gzip")
+
+		app.Server.Handler.ServeHTTP(w, r)
+
+		require.Equal(t, http.StatusOK, w.Result().StatusCode)
+		require.Equal(t, "gzip", w.Header().Get("Content-Encoding"))
+	})
+
 	t.Run("serves unexisting files without extension", func(t *testing.T) {
 		t.Parallel()
 
 		config := &Config{
 			Dir: "test/web/dist",
 		}
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
 		app := NewApp(config).Init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/random-page", nil)
@@ -193,6 +235,10 @@ func TestGSS(t *testing.T) {
 		config := &Config{
 			Dir: "test/web/dist",
 		}
+		config, err := config.Validate()
+
+		require.NoError(t, err)
+
 		app := NewApp(config).Init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/favicon.ico", nil)
