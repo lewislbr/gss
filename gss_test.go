@@ -12,14 +12,14 @@ func TestGSS(t *testing.T) {
 	t.Run("uses the provided directory", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir: "test/web/dist",
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 
 		require.Equal(t, "test/web/dist", app.Config.Dir)
 	})
@@ -27,15 +27,15 @@ func TestGSS(t *testing.T) {
 	t.Run("uses the provided port", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir:  "test/web/dist",
 			Port: "8080",
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 
 		require.Equal(t, ":8080", app.Server.Addr)
 	})
@@ -43,17 +43,17 @@ func TestGSS(t *testing.T) {
 	t.Run("uses the provided headers", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir: "test/web/dist",
 			Headers: map[string]string{
 				"X-Test": "test",
 			},
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/", nil)
 
@@ -65,14 +65,14 @@ func TestGSS(t *testing.T) {
 	t.Run("redirects index correctly", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir: "test/web/dist",
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/index.html", nil)
 
@@ -84,14 +84,14 @@ func TestGSS(t *testing.T) {
 	t.Run("serves HTML files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir: "test/web/dist",
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/", nil)
 
@@ -105,14 +105,14 @@ func TestGSS(t *testing.T) {
 	t.Run("serves CSS files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir: "test/web/dist",
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/main.css", nil)
 
@@ -126,14 +126,14 @@ func TestGSS(t *testing.T) {
 	t.Run("serves JavaScript files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir: "test/web/dist",
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/main.js", nil)
 
@@ -147,14 +147,14 @@ func TestGSS(t *testing.T) {
 	t.Run("serves other files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir: "test/web/dist",
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/main.js.LICENSE.txt", nil)
 
@@ -167,14 +167,14 @@ func TestGSS(t *testing.T) {
 	t.Run("serves brotli files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir: "test/web/dist",
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/main.js", nil)
 
@@ -189,14 +189,14 @@ func TestGSS(t *testing.T) {
 	t.Run("serves gzip files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir: "test/web/dist",
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/main.js", nil)
 
@@ -211,14 +211,14 @@ func TestGSS(t *testing.T) {
 	t.Run("serves unexisting files without extension", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir: "test/web/dist",
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/random-page", nil)
 
@@ -232,14 +232,14 @@ func TestGSS(t *testing.T) {
 	t.Run("doesn't serve unexisting files with extension", func(t *testing.T) {
 		t.Parallel()
 
-		config := &Config{
+		cfg := &config{
 			Dir: "test/web/dist",
 		}
-		config, err := config.Validate()
+		cfg, err := cfg.validate()
 
 		require.NoError(t, err)
 
-		app := NewApp(config).Init()
+		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/favicon.ico", nil)
 

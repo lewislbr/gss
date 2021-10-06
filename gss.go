@@ -17,12 +17,12 @@ import (
 func main() {
 	setUpLogger()
 
-	config, err := NewConfig().GetYAML().GetCLI().Validate()
+	cfg, err := newConfig().withYAML().withFlags().validate()
 	if err != nil {
 		log.Fatal().Msgf("Error validating config: %v", err)
 	}
 
-	err = NewApp(config).Init().ListenAndServe()
+	err = newApp(cfg).init().run()
 	if err != nil {
 		log.Fatal().Msgf("Error starting server: %v", err)
 	}
@@ -37,37 +37,38 @@ func setUpLogger() {
 	log.Logger = log.With().Str("app", "GSS").Logger()
 }
 
-type Config struct {
+type config struct {
 	Dir     string            `yaml:"directory,omitempty"`
 	Headers map[string]string `yaml:"headers,omitempty"`
 	Port    string            `yaml:"port,omitempty"`
 }
 
-func NewConfig() *Config {
-	return &Config{}
+func newConfig() *config {
+	return &config{}
 }
 
-func (c *Config) GetYAML() *Config {
-	configFile := "gss.yaml"
+func (c *config) withYAML() *config {
+	file := "gss.yaml"
 
-	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		// If no file is found we assume config via YAML is not used
 		return c
 	}
 
-	content, err := os.ReadFile(configFile)
+	data, err := os.ReadFile(file)
 	if err != nil {
-		log.Fatal().Msgf("Error reading YAML config: %v", err)
+		log.Fatal().Msgf("Error reading config file: %v", err)
 	}
 
-	err = yaml.Unmarshal([]byte(content), &c)
+	err = yaml.Unmarshal([]byte(data), &c)
 	if err != nil {
-		log.Fatal().Msgf("Error unmarshalling YAML data: %v", err)
+		log.Fatal().Msgf("Error unmarshalling file data: %v", err)
 	}
 
 	return c
 }
 
-func (c *Config) GetCLI() *Config {
+func (c *config) withFlags() *config {
 	dir := flag.String("d", c.Dir, "Path to the directory to serve.")
 	port := flag.String("p", c.Port, "Port where to run the server.")
 
@@ -83,7 +84,7 @@ func (c *Config) GetCLI() *Config {
 	return c
 }
 
-func (c *Config) Validate() (*Config, error) {
+func (c *config) validate() (*config, error) {
 	if c.Dir == "" {
 		c.Dir = "dist"
 	}
@@ -97,16 +98,16 @@ func (c *Config) Validate() (*Config, error) {
 	return c, nil
 }
 
-type App struct {
-	Config Config
+type app struct {
+	Config config
 	Server *http.Server
 }
 
-func NewApp(config *Config) *App {
-	return &App{
-		Config: *config,
+func newApp(cfg *config) *app {
+	return &app{
+		Config: *cfg,
 		Server: &http.Server{
-			Addr:         ":" + config.Port,
+			Addr:         ":" + cfg.Port,
 			IdleTimeout:  120 * time.Second,
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
@@ -114,19 +115,19 @@ func NewApp(config *Config) *App {
 	}
 }
 
-func (a *App) Init() *App {
-	a.Server.Handler = a.AddHeaders((a.ServeSPA()))
+func (a *app) init() *app {
+	a.Server.Handler = a.addHeaders((a.serveSPA()))
 
 	return a
 }
 
-func (a *App) ListenAndServe() error {
+func (a *app) run() error {
 	log.Info().Msgf("Serving directory %q on port %v", a.Config.Dir, a.Config.Port)
 
 	return a.Server.ListenAndServe()
 }
 
-func (a *App) ServeSPA() http.HandlerFunc {
+func (a *app) serveSPA() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqFile := filepath.Join(a.Config.Dir, filepath.Clean(r.URL.Path))
 
@@ -169,7 +170,7 @@ func (a *App) ServeSPA() http.HandlerFunc {
 			}
 		}
 
-		acceptedEncodings := r.Header.Get("Accept-Encoding")
+		encodings := r.Header.Get("Accept-Encoding")
 		files, err := filepath.Glob(a.Config.Dir + "/*")
 		if err != nil {
 			log.Error().Msgf("Error getting files to serve: %v", err)
@@ -178,7 +179,7 @@ func (a *App) ServeSPA() http.HandlerFunc {
 		brotli := "br"
 		brotliExt := ".br"
 
-		if strings.Contains(acceptedEncodings, brotli) {
+		if strings.Contains(encodings, brotli) {
 			for _, f := range files {
 				if f == reqFile+brotliExt {
 					serveCompressedFile(brotli, brotliExt)
@@ -191,7 +192,7 @@ func (a *App) ServeSPA() http.HandlerFunc {
 		gzip := "gzip"
 		gzipExt := ".gz"
 
-		if strings.Contains(acceptedEncodings, gzip) {
+		if strings.Contains(encodings, gzip) {
 			for _, f := range files {
 				if f == reqFile+gzipExt {
 					serveCompressedFile(gzip, gzipExt)
@@ -207,7 +208,7 @@ func (a *App) ServeSPA() http.HandlerFunc {
 	}
 }
 
-func (a *App) AddHeaders(h http.Handler) http.HandlerFunc {
+func (a *app) addHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Server", "GSS")
 
