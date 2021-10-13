@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGSS(t *testing.T) {
@@ -17,11 +17,11 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 
-		require.Equal(t, "test/web/dist", app.Config.Dir)
+		assert.Equal(t, "test/web/dist", app.Config.Dir)
 	})
 
 	t.Run("uses the provided port", func(t *testing.T) {
@@ -33,11 +33,11 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 
-		require.Equal(t, ":8080", app.Server.Addr)
+		assert.Equal(t, ":8080", app.Server.Addr)
 	})
 
 	t.Run("uses the provided headers", func(t *testing.T) {
@@ -51,7 +51,7 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
@@ -59,7 +59,7 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		require.Equal(t, "test", w.Header().Get("X-Test"))
+		assert.Equal(t, "test", w.Header().Get("X-Test"))
 	})
 
 	t.Run("redirects index correctly", func(t *testing.T) {
@@ -70,7 +70,7 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
@@ -78,7 +78,7 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		require.Equal(t, http.StatusMovedPermanently, w.Result().StatusCode)
+		assert.Equal(t, http.StatusMovedPermanently, w.Result().StatusCode)
 	})
 
 	t.Run("serves HTML files succesfully", func(t *testing.T) {
@@ -89,7 +89,7 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
@@ -97,9 +97,9 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		require.Equal(t, http.StatusOK, w.Result().StatusCode)
-		require.Equal(t, "/", r.RequestURI)
-		require.Contains(t, w.Header().Get("Content-Type"), "html")
+		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, "/", r.RequestURI)
+		assert.Contains(t, w.Header().Get("Content-Type"), "html")
 	})
 
 	t.Run("serves CSS files succesfully", func(t *testing.T) {
@@ -110,7 +110,7 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
@@ -118,9 +118,9 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		require.Equal(t, http.StatusOK, w.Result().StatusCode)
-		require.Equal(t, "/main.css", r.RequestURI)
-		require.Contains(t, w.Header().Get("Content-Type"), "css")
+		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, "/main.css", r.RequestURI)
+		assert.Contains(t, w.Header().Get("Content-Type"), "css")
 	})
 
 	t.Run("serves JavaScript files succesfully", func(t *testing.T) {
@@ -131,7 +131,7 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
@@ -139,9 +139,9 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		require.Equal(t, http.StatusOK, w.Result().StatusCode)
-		require.Equal(t, "/main.js", r.RequestURI)
-		require.Contains(t, w.Header().Get("Content-Type"), "javascript")
+		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, "/main.js", r.RequestURI)
+		assert.Contains(t, w.Header().Get("Content-Type"), "javascript")
 	})
 
 	t.Run("serves other files succesfully", func(t *testing.T) {
@@ -152,7 +152,7 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
@@ -160,8 +160,8 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		require.Equal(t, http.StatusOK, w.Result().StatusCode)
-		require.Equal(t, "/main.js.LICENSE.txt", r.RequestURI)
+		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, "/main.js.LICENSE.txt", r.RequestURI)
 	})
 
 	t.Run("serves brotli files succesfully", func(t *testing.T) {
@@ -172,7 +172,7 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
@@ -182,8 +182,8 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		require.Equal(t, http.StatusOK, w.Result().StatusCode)
-		require.Equal(t, "br", w.Header().Get("Content-Encoding"))
+		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, "br", w.Header().Get("Content-Encoding"))
 	})
 
 	t.Run("serves gzip files succesfully", func(t *testing.T) {
@@ -194,7 +194,7 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
@@ -204,8 +204,8 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		require.Equal(t, http.StatusOK, w.Result().StatusCode)
-		require.Equal(t, "gzip", w.Header().Get("Content-Encoding"))
+		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, "gzip", w.Header().Get("Content-Encoding"))
 	})
 
 	t.Run("serves unexisting files without extension", func(t *testing.T) {
@@ -216,7 +216,7 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
@@ -224,9 +224,9 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		require.Equal(t, http.StatusOK, w.Result().StatusCode)
-		require.Equal(t, "/random-page", r.RequestURI)
-		require.Contains(t, w.Header().Get("Content-Type"), "html")
+		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, "/random-page", r.RequestURI)
+		assert.Contains(t, w.Header().Get("Content-Type"), "html")
 	})
 
 	t.Run("doesn't serve unexisting files with extension", func(t *testing.T) {
@@ -237,7 +237,7 @@ func TestGSS(t *testing.T) {
 		}
 		cfg, err := cfg.validate()
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
@@ -245,6 +245,6 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		require.Equal(t, http.StatusNotFound, w.Result().StatusCode)
+		assert.Equal(t, http.StatusNotFound, w.Result().StatusCode)
 	})
 }
