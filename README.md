@@ -6,6 +6,7 @@ GSS (Go serve SPA) is a containerized web server for single-page applications wr
 
 - Optimized for single-page apps.
 - Automatically serves pre-compressed brotli and gzip files if available.
+- Sensible default cache configuration.
 - Docker-based.
 - Configurable via YAML.
 - Lightweight.

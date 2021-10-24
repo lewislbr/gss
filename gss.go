@@ -129,68 +129,78 @@ func (a *app) serveSPA() http.HandlerFunc {
 			reqFile = filepath.Join(a.Config.Dir, "index.html")
 		}
 
-		serveCompressedFile := func(encoding, extension string) {
-			serve := func(mimeType string) {
+		serveFile := func(mimeType string) {
+			files, err := filepath.Glob(a.Config.Dir + "/*")
+			if err != nil {
+				log.Error().Msgf("Error getting files to serve: %v", err)
+			}
+
+			encodings := r.Header.Get("Accept-Encoding")
+			brotli := "br"
+			brotliExt := ".br"
+			gzip := "gzip"
+			gzipExt := ".gz"
+			serveCompressed := func(encoding, extension string) {
 				w.Header().Set("Content-Encoding", encoding)
 				w.Header().Set("Content-Type", mimeType)
 
 				http.ServeFile(w, r, reqFile+extension)
 			}
 
-			switch filepath.Ext(reqFile) {
-			case ".html":
-				serve("text/html")
-			case ".css":
-				serve("text/css")
-			case ".js":
-				serve("application/javascript")
-			case ".svg":
-				serve("image/svg+xml")
-			default:
-				http.ServeFile(w, r, reqFile)
-			}
-		}
+			if strings.Contains(encodings, brotli) {
+				for _, f := range files {
+					if f == reqFile+brotliExt {
+						serveCompressed(brotli, brotliExt)
 
-		encodings := r.Header.Get("Accept-Encoding")
-		files, err := filepath.Glob(a.Config.Dir + "/*")
-		if err != nil {
-			log.Error().Msgf("Error getting files to serve: %v", err)
-		}
-
-		brotli := "br"
-		brotliExt := ".br"
-
-		if strings.Contains(encodings, brotli) {
-			for _, f := range files {
-				if f == reqFile+brotliExt {
-					serveCompressedFile(brotli, brotliExt)
-
-					return
+						return
+					}
 				}
 			}
-		}
 
-		gzip := "gzip"
-		gzipExt := ".gz"
+			if strings.Contains(encodings, gzip) {
+				for _, f := range files {
+					if f == reqFile+gzipExt {
+						serveCompressed(gzip, gzipExt)
 
-		if strings.Contains(encodings, gzip) {
-			for _, f := range files {
-				if f == reqFile+gzipExt {
-					serveCompressedFile(gzip, gzipExt)
-
-					return
+						return
+					}
 				}
 			}
+
+			// If the request does not accept compressed files, or the directory does not contain compressed files,
+			// serve the file as is.
+			http.ServeFile(w, r, reqFile)
 		}
 
-		// If the request does not accept compressed files, or the directory does not contain compressed files,
-		// serve the file as is.
-		http.ServeFile(w, r, reqFile)
+		switch filepath.Ext(reqFile) {
+		case ".html":
+			w.Header().Set("Cache-Control", "no-cache")
+
+			serveFile("text/html")
+		case ".css":
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+
+			serveFile("text/css")
+		case ".js":
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+
+			serveFile("application/javascript")
+		case ".svg":
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+
+			serveFile("image/svg+xml")
+		default:
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+
+			http.ServeFile(w, r, reqFile)
+		}
 	}
 }
 
 func (a *app) setHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Vary", "Accept-Encoding")
+
 		for k, v := range a.Config.Headers {
 			w.Header().Set(k, v)
 		}
