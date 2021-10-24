@@ -114,12 +114,12 @@ func TestGSS(t *testing.T) {
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, "/main.css", nil)
+		r := httptest.NewRequest(http.MethodGet, "/main.68aa49f7.css", nil)
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Equal(t, "/main.css", r.RequestURI)
+		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, "/main.68aa49f7.css", r.RequestURI)
 		assert.Contains(t, w.Header().Get("Content-Type"), "css")
 	})
 
@@ -135,12 +135,12 @@ func TestGSS(t *testing.T) {
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, "/main.js", nil)
+		r := httptest.NewRequest(http.MethodGet, "/main.8d3db4ef.js", nil)
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Equal(t, "/main.js", r.RequestURI)
+		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, "/main.8d3db4ef.js", r.RequestURI)
 		assert.Contains(t, w.Header().Get("Content-Type"), "javascript")
 	})
 
@@ -156,12 +156,12 @@ func TestGSS(t *testing.T) {
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, "/main.js.LICENSE.txt", nil)
+		r := httptest.NewRequest(http.MethodGet, "/main.8d3db4ef.js.LICENSE.txt", nil)
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Equal(t, "/main.js.LICENSE.txt", r.RequestURI)
+		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, "/main.8d3db4ef.js.LICENSE.txt", r.RequestURI)
 	})
 
 	t.Run("serves brotli files succesfully", func(t *testing.T) {
@@ -176,7 +176,7 @@ func TestGSS(t *testing.T) {
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, "/main.js", nil)
+		r := httptest.NewRequest(http.MethodGet, "/main.8d3db4ef.js", nil)
 
 		r.Header.Add("Accept-Encoding", "br")
 
@@ -198,7 +198,7 @@ func TestGSS(t *testing.T) {
 
 		app := newApp(cfg).init()
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, "/main.js", nil)
+		r := httptest.NewRequest(http.MethodGet, "/main.8d3db4ef.js", nil)
 
 		r.Header.Add("Accept-Encoding", "gzip")
 
@@ -246,5 +246,56 @@ func TestGSS(t *testing.T) {
 		app.Server.Handler.ServeHTTP(w, r)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
+	t.Run("serves a cached response for a fresh resource", func(t *testing.T) {
+		t.Parallel()
+
+		cfg := &config{
+			Dir: "test/web/dist",
+		}
+		cfg, err := cfg.validate()
+
+		assert.NoError(t, err)
+
+		app := newApp(cfg).init()
+
+		t.Run("HTML files should have Cache-Control: no-cache", func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest(http.MethodGet, "/", nil)
+
+			app.Server.Handler.ServeHTTP(w, r)
+
+			last := w.Header().Get("Last-Modified")
+
+			w = httptest.NewRecorder()
+			r = httptest.NewRequest(http.MethodGet, "/", nil)
+
+			r.Header.Set("If-Modified-Since", last)
+
+			app.Server.Handler.ServeHTTP(w, r)
+
+			assert.Equal(t, http.StatusNotModified, w.Code)
+			assert.Equal(t, w.Header().Get("Cache-Control"), "no-cache")
+		})
+
+		t.Run("other files should have Cache-Control: public, max-age=31536000, immutable", func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest(http.MethodGet, "/main.8d3db4ef.js", nil)
+
+			app.Server.Handler.ServeHTTP(w, r)
+
+			last := w.Header().Get("Last-Modified")
+
+			w = httptest.NewRecorder()
+			r = httptest.NewRequest(http.MethodGet, "/main.8d3db4ef.js", nil)
+
+			r.Header.Set("If-Modified-Since", last)
+
+			app.Server.Handler.ServeHTTP(w, r)
+
+			assert.Equal(t, http.StatusNotModified, w.Code)
+			assert.Equal(t, w.Header().Get("Cache-Control"), "public, max-age=31536000, immutable")
+		})
 	})
 }

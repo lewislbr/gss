@@ -9,6 +9,7 @@ module.exports = {
   mode: "production",
   entry: "./src/index.jsx",
   output: {
+    filename: "[name].[contenthash:8].js",
     path: path.join(__dirname, "/dist"),
   },
   module: {
@@ -43,7 +44,9 @@ module.exports = {
       },
       template: "./src/index.html",
     }),
-    new MiniCssExtractPlugin(),
+    new MiniCssExtractPlugin({
+      filename: "[name].[contenthash:8].css",
+    }),
     new CompressionPlugin(),
     new CompressionPlugin({
       algorithm: "brotliCompress",
