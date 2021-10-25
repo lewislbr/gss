@@ -78,7 +78,7 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusMovedPermanently, w.Result().StatusCode)
+		assert.Equal(t, http.StatusMovedPermanently, w.Code)
 	})
 
 	t.Run("serves HTML files succesfully", func(t *testing.T) {
@@ -97,7 +97,7 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "/", r.RequestURI)
 		assert.Contains(t, w.Header().Get("Content-Type"), "html")
 	})
@@ -118,7 +118,7 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "/main.css", r.RequestURI)
 		assert.Contains(t, w.Header().Get("Content-Type"), "css")
 	})
@@ -139,7 +139,7 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "/main.js", r.RequestURI)
 		assert.Contains(t, w.Header().Get("Content-Type"), "javascript")
 	})
@@ -160,7 +160,7 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "/main.js.LICENSE.txt", r.RequestURI)
 	})
 
@@ -182,7 +182,7 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "br", w.Header().Get("Content-Encoding"))
 	})
 
@@ -204,7 +204,7 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "gzip", w.Header().Get("Content-Encoding"))
 	})
 
@@ -224,7 +224,7 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "/random-page", r.RequestURI)
 		assert.Contains(t, w.Header().Get("Content-Type"), "html")
 	})
@@ -245,6 +245,6 @@ func TestGSS(t *testing.T) {
 
 		app.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, http.StatusNotFound, w.Result().StatusCode)
+		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 }
