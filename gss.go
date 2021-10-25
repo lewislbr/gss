@@ -91,8 +91,6 @@ func newApp(cfg *config) *app {
 		Config: *cfg,
 		Server: &http.Server{
 			Addr:         ":" + cfg.Port,
-			IdleTimeout:  120 * time.Second,
-			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		},
 	}
