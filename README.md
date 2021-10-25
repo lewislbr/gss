@@ -60,8 +60,6 @@ Default: `dist`.
 
 Headers to add to the response.
 
-Default: `Server: GSS`.
-
 > Example:
 >
 > ```yaml

@@ -191,8 +191,6 @@ func (a *app) serveSPA() http.HandlerFunc {
 
 func (a *app) setHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Server", "GSS")
-
 		for k, v := range a.Config.Headers {
 			w.Header().Add(k, v)
 		}
