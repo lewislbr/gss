@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -17,7 +16,7 @@ import (
 func main() {
 	setUpLogger()
 
-	cfg, err := newConfig().withYAML().withFlags().validate()
+	cfg, err := newConfig().withYAML().validate()
 	if err != nil {
 		log.Fatal().Msgf("Error validating config: %v", err)
 	}
@@ -63,22 +62,6 @@ func (c *config) withYAML() *config {
 	err = yaml.Unmarshal([]byte(data), &c)
 	if err != nil {
 		log.Fatal().Msgf("Error unmarshalling file data: %v", err)
-	}
-
-	return c
-}
-
-func (c *config) withFlags() *config {
-	dir := flag.String("d", c.Dir, "Path to the directory to serve.")
-	port := flag.String("p", c.Port, "Port where to run the server.")
-
-	flag.Parse()
-
-	if *dir != "" {
-		c.Dir = *dir
-	}
-	if *port != "" {
-		c.Port = *port
 	}
 
 	return c
