@@ -97,7 +97,7 @@ func newApp(cfg *config) *app {
 }
 
 func (a *app) init() *app {
-	a.Server.Handler = a.addHeaders((a.serveSPA()))
+	a.Server.Handler = a.setHeaders((a.serveSPA()))
 
 	return a
 }
@@ -189,7 +189,7 @@ func (a *app) serveSPA() http.HandlerFunc {
 	}
 }
 
-func (a *app) addHeaders(h http.Handler) http.HandlerFunc {
+func (a *app) setHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Server", "GSS")
 
