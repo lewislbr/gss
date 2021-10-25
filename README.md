@@ -1,6 +1,6 @@
 # GSS
 
-GSS (Go serve SPA) is a web server for single-page applications written in Go.
+GSS (Go serve SPA) is a containerized web server for single-page applications written in Go.
 
 ## Features
 
@@ -15,21 +15,12 @@ GSS (Go serve SPA) is a web server for single-page applications written in Go.
 GSS works as a Docker image.
 
 ```sh
-docker run -p [container-port]:80 -v [spa-folder]:/dist lewislbr/gss
+docker run -p [port-where-to-serve]:80 -v [folder-to-serve]:/dist lewislbr/gss
 ```
 
 By default it serves a directory in the container named `dist` at port `80`, but you can change this values with a YAML configuration file.
 
 > File must be named `gss.yaml`
-
-```yaml
-directory: [spa-folder]
-port: [server-port]
-```
-
-```sh
-docker run -p [container-port]:[server-port] -v [yaml-file]:/gss.yaml -v [spa-folder]:/[container-folder] lewislbr/gss
-```
 
 > Example:
 >
@@ -41,6 +32,8 @@ docker run -p [container-port]:[server-port] -v [yaml-file]:/gss.yaml -v [spa-fo
 > ```sh
 > docker run -p 8080:8080 -v $PWD/gss.yaml:/gss.yaml -v $PWD/web/dist:/public lewislbr/gss
 > ```
+>
+> The folder `public` will be accessible at port `8080`.
 
 ## Configuration options
 
