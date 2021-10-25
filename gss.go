@@ -131,8 +131,8 @@ func (a *app) serveSPA() http.HandlerFunc {
 
 		serveCompressedFile := func(encoding, extension string) {
 			serve := func(mimeType string) {
-				w.Header().Add("Content-Encoding", encoding)
-				w.Header().Add("Content-Type", mimeType)
+				w.Header().Set("Content-Encoding", encoding)
+				w.Header().Set("Content-Type", mimeType)
 
 				http.ServeFile(w, r, reqFile+extension)
 			}
@@ -192,7 +192,7 @@ func (a *app) serveSPA() http.HandlerFunc {
 func (a *app) setHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for k, v := range a.Config.Headers {
-			w.Header().Add(k, v)
+			w.Header().Set(k, v)
 		}
 
 		h.ServeHTTP(w, r)
