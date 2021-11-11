@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -16,12 +15,8 @@ import (
 func main() {
 	setUpLogger()
 
-	cfg, err := newConfig().withYAML().validate()
-	if err != nil {
-		log.Fatal().Msgf("Error validating config: %v", err)
-	}
-
-	err = newApp(cfg).init().run()
+	cfg := newConfig().withYAML()
+	err := newApp(cfg).init().run()
 	if err != nil {
 		log.Fatal().Msgf("Error starting server: %v", err)
 	}
@@ -37,9 +32,7 @@ func setUpLogger() {
 }
 
 type config struct {
-	Dir     string            `yaml:"directory,omitempty"`
 	Headers map[string]string `yaml:"headers,omitempty"`
-	Port    string            `yaml:"port,omitempty"`
 }
 
 func newConfig() *config {
@@ -67,20 +60,6 @@ func (c *config) withYAML() *config {
 	return c
 }
 
-func (c *config) validate() (*config, error) {
-	if c.Dir == "" {
-		c.Dir = "dist"
-	}
-	if c.Port == "" {
-		c.Port = "80"
-	}
-	if _, err := os.Stat(c.Dir); os.IsNotExist(err) {
-		return nil, fmt.Errorf("directory %q not found", c.Dir)
-	}
-
-	return c, nil
-}
-
 type app struct {
 	Config config
 	Server *http.Server
@@ -90,7 +69,6 @@ func newApp(cfg *config) *app {
 	return &app{
 		Config: *cfg,
 		Server: &http.Server{
-			Addr:         ":" + cfg.Port,
 			WriteTimeout: 10 * time.Second,
 		},
 	}
@@ -103,34 +81,33 @@ func (a *app) init() *app {
 }
 
 func (a *app) run() error {
-	log.Info().Msgf("Serving directory %q on port %v", a.Config.Dir, a.Config.Port)
-
 	return a.Server.ListenAndServe()
 }
 
 func (a *app) serveSPA() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		reqFile := filepath.Join(a.Config.Dir, filepath.Clean(r.URL.Path))
+		dir := "dist"
+		file := filepath.Join(dir, filepath.Clean(r.URL.Path))
 
 		// Send the index if the root path is requested.
 		if filepath.Clean(r.URL.Path) == "/" {
-			reqFile = filepath.Join(a.Config.Dir, "index.html")
+			file = filepath.Join(dir, "index.html")
 		}
 
 		// Send a 404 if a file with extension is not found, and the index if it has no extension,
 		// as it will likely be a SPA route.
-		if _, err := os.Stat(reqFile); os.IsNotExist(err) {
-			if filepath.Ext(reqFile) != "" {
+		if _, err := os.Stat(file); os.IsNotExist(err) {
+			if filepath.Ext(file) != "" {
 				w.WriteHeader(http.StatusNotFound)
 
 				return
 			}
 
-			reqFile = filepath.Join(a.Config.Dir, "index.html")
+			file = filepath.Join(dir, "index.html")
 		}
 
 		serveFile := func(mimeType string) {
-			files, err := filepath.Glob(a.Config.Dir + "/*")
+			files, err := filepath.Glob(dir + "/*")
 			if err != nil {
 				log.Error().Msgf("Error getting files to serve: %v", err)
 			}
@@ -144,12 +121,12 @@ func (a *app) serveSPA() http.HandlerFunc {
 				w.Header().Set("Content-Encoding", encoding)
 				w.Header().Set("Content-Type", mimeType)
 
-				http.ServeFile(w, r, reqFile+extension)
+				http.ServeFile(w, r, file+extension)
 			}
 
 			if strings.Contains(encodings, brotli) {
 				for _, f := range files {
-					if f == reqFile+brotliExt {
+					if f == file+brotliExt {
 						serveCompressed(brotli, brotliExt)
 
 						return
@@ -159,7 +136,7 @@ func (a *app) serveSPA() http.HandlerFunc {
 
 			if strings.Contains(encodings, gzip) {
 				for _, f := range files {
-					if f == reqFile+gzipExt {
+					if f == file+gzipExt {
 						serveCompressed(gzip, gzipExt)
 
 						return
@@ -169,10 +146,10 @@ func (a *app) serveSPA() http.HandlerFunc {
 
 			// If the request does not accept compressed files, or the directory does not contain compressed files,
 			// serve the file as is.
-			http.ServeFile(w, r, reqFile)
+			http.ServeFile(w, r, file)
 		}
 
-		switch filepath.Ext(reqFile) {
+		switch filepath.Ext(file) {
 		case ".html":
 			w.Header().Set("Cache-Control", "no-cache")
 
@@ -192,7 +169,7 @@ func (a *app) serveSPA() http.HandlerFunc {
 		default:
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 
-			http.ServeFile(w, r, reqFile)
+			http.ServeFile(w, r, file)
 		}
 	}
 }
