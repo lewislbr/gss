@@ -1,14 +1,4 @@
-FROM golang:1-alpine AS build
-ENV USER=appuser
-ENV UID=10001
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --no-create-home \
-    --shell "/sbin/nologin" \
-    --uid "${UID}" \
-    "${USER}"
+FROM golang:1.17-alpine AS build
 WORKDIR /
 COPY . ./
 ENV CGO_ENABLED=0
@@ -18,8 +8,8 @@ ENV GOOS=linux
 RUN go build -o gss -ldflags="-s -w" gss.go
 
 FROM scratch
+USER nobody:nobody
 COPY --from=build /etc/passwd /etc/passwd
 COPY --from=build /etc/group /etc/group
 COPY --from=build /gss ./
-USER appuser:appuser
 ENTRYPOINT ["/gss"]
