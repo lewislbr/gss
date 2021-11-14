@@ -73,7 +73,7 @@ The server can be configured with a YAML file. File must be named `/gss.yaml`.
 
 ### `headers`
 
-Headers to add to the response.
+Headers to add to the response. `Cache-Control`, `Content-Encoding`, `Content-Type`, and `Vary` are automatically set.
 
 > Example:
 >
@@ -81,9 +81,12 @@ Headers to add to the response.
 > # gss.yaml
 >
 > headers:
+> Content-Security-Policy: "default-src 'self'; connect-src 'self'"
 >   Referrer-Policy: "strict-origin-when-cross-origin"
->   Server: GSS
 >   Strict-Transport-Security: "max-age=63072000; includeSubDomains; preload"
+>   X-Content-Type-Options: "nosniff"
+>   X-Frame-Options: "SAMEORIGIN"
+>   X-XSS-Protection: "1; mode=block"
 > ```
 
 ## Contributing
