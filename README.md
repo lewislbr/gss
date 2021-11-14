@@ -19,7 +19,7 @@ GSS works as a Docker image. By default it serves a directory in the container n
 ### Running container directly
 
 ```sh
-docker run -p [container-port]:80 -v [local-folder-to-serve-path]:/dist lewislbr/gss
+docker run -p [container-port]:8080 -v [local-folder-to-serve-path]:/dist lewislbr/gss
 ```
 
 > Example:
