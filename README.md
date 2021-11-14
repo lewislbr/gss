@@ -7,13 +7,14 @@ GSS (Go serve SPA) is a containerized web server for single-page applications wr
 - Optimized for single-page apps.
 - Automatically serves pre-compressed brotli and gzip files if available.
 - Sensible default cache configuration.
+- Out-of-the-box metrics.
 - Docker-based.
 - Configurable via YAML.
 - Lightweight.
 
 ## Usage
 
-GSS works as a Docker image. By default it serves a directory in the container named `dist` at port `8080`.
+GSS works as a Docker image. By default it serves a directory in the container named `dist` at port `8080`, and exposes a metrics endpoint at `:9090/metrics`.
 
 ### Running container directly
 

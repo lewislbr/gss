@@ -4,9 +4,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/felixge/httpsnoop"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
@@ -15,10 +20,20 @@ import (
 func main() {
 	setUpLogger()
 
+	metrics := registerMetrics()
+	internalServer := newInternalServer(metrics)
+
+	go func() {
+		err := internalServer.run()
+		if err != nil {
+			log.Fatal().Msgf("Error starting internal server: %v", err)
+		}
+	}()
+
 	cfg := newConfig().withYAML()
-	err := newApp(cfg).init().run()
+	err := newFileServer(cfg, metrics).init().run()
 	if err != nil {
-		log.Fatal().Msgf("Error starting server: %v", err)
+		log.Fatal().Msgf("Error starting file server: %v", err)
 	}
 }
 
@@ -60,14 +75,16 @@ func (c *config) withYAML() *config {
 	return c
 }
 
-type app struct {
-	Config config
-	Server *http.Server
+type fileServer struct {
+	Config  config
+	Metrics metrics
+	Server  *http.Server
 }
 
-func newApp(cfg *config) *app {
-	return &app{
-		Config: *cfg,
+func newFileServer(cfg *config, metrics *metrics) *fileServer {
+	return &fileServer{
+		Config:  *cfg,
+		Metrics: *metrics,
 		Server: &http.Server{
 			Addr:         ":8080",
 			WriteTimeout: 10 * time.Second,
@@ -75,17 +92,17 @@ func newApp(cfg *config) *app {
 	}
 }
 
-func (a *app) init() *app {
-	a.Server.Handler = a.setHeaders((a.serveSPA()))
+func (f *fileServer) init() *fileServer {
+	f.Server.Handler = metricsMiddleware(&f.Metrics)(f.setHeaders((f.serveSPA())))
 
-	return a
+	return f
 }
 
-func (a *app) run() error {
-	return a.Server.ListenAndServe()
+func (f *fileServer) run() error {
+	return f.Server.ListenAndServe()
 }
 
-func (a *app) serveSPA() http.HandlerFunc {
+func (f *fileServer) serveSPA() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dir := "dist"
 		file := filepath.Join(dir, filepath.Clean(r.URL.Path))
@@ -175,14 +192,102 @@ func (a *app) serveSPA() http.HandlerFunc {
 	}
 }
 
-func (a *app) setHeaders(h http.Handler) http.HandlerFunc {
+func (f *fileServer) setHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Vary", "Accept-Encoding")
 
-		for k, v := range a.Config.Headers {
+		for k, v := range f.Config.Headers {
 			w.Header().Set(k, v)
 		}
 
 		h.ServeHTTP(w, r)
+	}
+}
+
+type internalServer struct {
+	Server *http.Server
+}
+
+func newInternalServer(metrics *metrics) *internalServer {
+	http.HandleFunc("/metrics", metrics.Default().ServeHTTP)
+
+	s := &http.Server{}
+
+	s.Addr = ":9090"
+
+	return &internalServer{
+		Server: s,
+	}
+}
+
+func (i *internalServer) run() error {
+	return i.Server.ListenAndServe()
+}
+
+type metrics struct {
+	requestsReceived *prometheus.CounterVec
+	requestDuration  *prometheus.HistogramVec
+	bytesWritten     prometheus.Counter
+}
+
+func registerMetrics() *metrics {
+	const labelCode = "code"
+
+	reqReceived := promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "http",
+			Name:      "requests_total",
+			Help:      "Total number of requests received.",
+		},
+		[]string{labelCode},
+	)
+	reqDuration := promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "http",
+			Name:      "request_duration_seconds",
+			Help:      "Duration of a request in seconds.",
+		},
+		[]string{labelCode},
+	)
+	bytesWritten := promauto.NewCounter(
+		prometheus.CounterOpts{
+			Namespace: "http",
+			Name:      "bytes_written_total",
+			Help:      "Total number of bytes written.",
+		},
+	)
+
+	return &metrics{
+		requestsReceived: reqReceived,
+		requestDuration:  reqDuration,
+		bytesWritten:     bytesWritten,
+	}
+}
+
+func (m *metrics) Default() http.Handler {
+	return promhttp.Handler()
+}
+
+func (m *metrics) IncRequests(code int) {
+	m.requestsReceived.WithLabelValues(strconv.Itoa(code)).Inc()
+}
+
+func (m *metrics) ObsDuration(code int, duration float64) {
+	m.requestDuration.WithLabelValues(strconv.Itoa(code)).Observe(duration)
+}
+
+func (m *metrics) AddBytes(bytes float64) {
+	m.bytesWritten.Add(bytes)
+}
+
+func metricsMiddleware(metrics *metrics) func(h http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			snoop := httpsnoop.CaptureMetrics(h, w, r)
+
+			metrics.IncRequests(snoop.Code)
+			metrics.ObsDuration(snoop.Code, snoop.Duration.Seconds())
+			metrics.AddBytes(float64(snoop.Written))
+		})
 	}
 }
