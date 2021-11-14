@@ -13,7 +13,7 @@ GSS (Go serve SPA) is a containerized web server for single-page applications wr
 
 ## Usage
 
-GSS works as a Docker image. By default it serves a directory in the container named `dist` at port `80`.
+GSS works as a Docker image. By default it serves a directory in the container named `dist` at port `8080`.
 
 ### Running container directly
 
@@ -26,10 +26,10 @@ docker run -p [container-port]:80 -v [local-folder-to-serve-path]:/dist lewislbr
 > Having a local folder named `public` with SPA files:
 >
 > ```sh
-> docker run -p 8080:80 -v $PWD/public:/dist lewislbr/gss
+> docker run -p 3000:8080 -v $PWD/public:/dist lewislbr/gss
 > ```
 >
-> The server with the contents from `public` will be accessible at port `8080`.
+> The server with the contents from `public` will be accessible at port `3000`.
 
 ### With a custom image
 
@@ -50,8 +50,10 @@ COPY [local-folder-to-serve-path] ./dist
 > ```
 >
 > ```
-> docker run -p 8080:80 custom-image
+> docker run -p 3000:8080 custom-image
 > ```
+>
+> The server with the contents from `public` will be accessible at port `3000`.
 
 ## Configuration options
 
@@ -60,7 +62,7 @@ The server can be configured with a YAML file. File must be named `/gss.yaml`.
 > Example:
 >
 > ```sh
-> docker run -p 8080:80 -v $PWD/gss.yaml:/gss.yaml -v $PWD/public:/dist lewislbr/gss
+> docker run -p 3000:8080 -v $PWD/gss.yaml:/gss.yaml -v $PWD/public:/dist lewislbr/gss
 > ```
 
 > ```Dockerfile

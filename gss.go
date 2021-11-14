@@ -69,6 +69,7 @@ func newApp(cfg *config) *app {
 	return &app{
 		Config: *cfg,
 		Server: &http.Server{
+			Addr:         ":8080",
 			WriteTimeout: 10 * time.Second,
 		},
 	}
