@@ -56,8 +56,8 @@ func newConfig() *config {
 
 func (c *config) withYAML() *config {
 	file := "gss.yaml"
-
-	if _, err := os.Stat(file); os.IsNotExist(err) {
+	_, err := os.Stat(file)
+	if os.IsNotExist(err) {
 		// If no file is found we assume config via YAML is not used
 		return c
 	}
@@ -114,13 +114,12 @@ func (f *fileServer) serveSPA() http.HandlerFunc {
 
 		// Send a 404 if a file with extension is not found, and the index if it has no extension,
 		// as it will likely be a SPA route.
-		if _, err := os.Stat(file); os.IsNotExist(err) {
+		_, err := os.Stat(file)
+		if os.IsNotExist(err) {
 			if filepath.Ext(file) != "" {
 				w.WriteHeader(http.StatusNotFound)
-
 				return
 			}
-
 			file = filepath.Join(dir, "index.html")
 		}
 
@@ -151,7 +150,6 @@ func (f *fileServer) serveSPA() http.HandlerFunc {
 					}
 				}
 			}
-
 			if strings.Contains(encodings, gzip) {
 				for _, f := range files {
 					if f == file+gzipExt {
@@ -170,23 +168,18 @@ func (f *fileServer) serveSPA() http.HandlerFunc {
 		switch filepath.Ext(file) {
 		case ".html":
 			w.Header().Set("Cache-Control", "no-cache")
-
 			serveFile("text/html")
 		case ".css":
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-
 			serveFile("text/css")
 		case ".js":
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-
 			serveFile("application/javascript")
 		case ".svg":
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-
 			serveFile("image/svg+xml")
 		default:
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-
 			http.ServeFile(w, r, file)
 		}
 	}
@@ -212,7 +205,6 @@ func newInternalServer(metrics *metrics) *internalServer {
 	http.HandleFunc("/metrics", metrics.Default().ServeHTTP)
 
 	s := &http.Server{}
-
 	s.Addr = ":9090"
 
 	return &internalServer{
