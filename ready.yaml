@@ -3,9 +3,11 @@ tasks:
     command: docker build -t lewislbr/gss:ci --target=ci .
   - name: format
     command: docker run --rm -v $(pwd):/app -w /app lewislbr/gss:ci gofumpt -extra -l -w .
+  - name: backend lines
+    command: docker run --rm -v $(pwd):/app -w /app lewislbr/gss:ci golines --base-formatter gofumpt -m 120 --no-chain-split-dots -w .
   - name: lint
     command: docker run --rm -v $(pwd):/app -w /app lewislbr/gss:ci golangci-lint run --allow-parallel-runners --timeout 60s
   - name: vet
     command: docker run --rm -v $(pwd):/app -w /app lewislbr/gss:ci go vet ./...
   - name: test
-    command: sed -i "" "s|"dist"|"test/public"|g" gss.go && docker run --rm -v $(pwd):/app -w /app lewislbr/gss:ci go test; sed -i "" "s|"test/public"|"dist"|g" gss.go
+    command: sed -i "" "s|"dist"|"test/public"|g" gss.go && docker run --rm -v $(pwd):/app -w /app lewislbr/gss:ci go test ./... -count=1 -cover -json | tparse; sed -i "" "s|"test/public"|"dist"|g" gss.go

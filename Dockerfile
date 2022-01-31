@@ -8,7 +8,9 @@ COPY . ./
 FROM base AS ci
 RUN apk add build-base
 RUN go install mvdan.cc/gofumpt@latest
+RUN go install github.com/segmentio/golines@latest
 RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+RUN go install github.com/mfridman/tparse@latest
 
 FROM base AS build
 ENV CGO_ENABLED=0
