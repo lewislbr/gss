@@ -1,8 +1,5 @@
 FROM golang:1.20-alpine AS base
 WORKDIR /gss
-COPY go.mod go.sum ./
-RUN go mod download
-RUN go mod verify
 COPY . ./
 
 FROM base AS ci
