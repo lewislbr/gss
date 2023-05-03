@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@master
+        uses: actions/checkout@main
         with:
           fetch-depth: 0
       - name: Get git tag
