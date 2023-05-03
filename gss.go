@@ -104,31 +104,27 @@ func (f *fileServer) run() error {
 func (f *fileServer) serveSPA() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dir := "dist"
-		file := filepath.Join(dir, filepath.Clean(r.URL.Path))
+		requestedFile := filepath.Join(dir, filepath.Clean(r.URL.Path))
 
 		// Send the index if the root path is requested.
 		if filepath.Clean(r.URL.Path) == "/" {
-			file = filepath.Join(dir, "index.html")
+			requestedFile = filepath.Join(dir, "index.html")
 		}
 
 		// Send a 404 if a file with extension is not found, and the index if it has no extension,
 		// as it will likely be a SPA route.
-		_, err := os.Stat(file)
+		_, err := os.Stat(requestedFile)
 		if os.IsNotExist(err) {
-			if filepath.Ext(file) != "" {
+			if filepath.Ext(requestedFile) != "" {
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}
-			file = filepath.Join(dir, "index.html")
+			requestedFile = filepath.Join(dir, "index.html")
 		}
 
 		serveFile := func(mimeType string) {
-			files, err := filepath.Glob(dir + "/*")
-			if err != nil {
-				log.Error().Msgf("Error getting files to serve: %v", err)
-			}
-
-			encodings := r.Header.Get("Accept-Encoding")
+			availableFiles := getFiles(dir)
+			acceptedEncodings := r.Header.Get("Accept-Encoding")
 			brotli := "br"
 			brotliExt := ".br"
 			gzip := "gzip"
@@ -136,35 +132,30 @@ func (f *fileServer) serveSPA() http.HandlerFunc {
 			serveCompressed := func(encoding, extension string) {
 				w.Header().Set("Content-Encoding", encoding)
 				w.Header().Set("Content-Type", mimeType)
-
-				http.ServeFile(w, r, file+extension)
+				http.ServeFile(w, r, requestedFile+extension)
 			}
-
-			if strings.Contains(encodings, brotli) {
-				for _, f := range files {
-					if f == file+brotliExt {
+			if strings.Contains(acceptedEncodings, brotli) {
+				for _, f := range availableFiles {
+					if f == requestedFile+brotliExt {
 						serveCompressed(brotli, brotliExt)
-
 						return
 					}
 				}
 			}
-			if strings.Contains(encodings, gzip) {
-				for _, f := range files {
-					if f == file+gzipExt {
+			if strings.Contains(acceptedEncodings, gzip) {
+				for _, f := range availableFiles {
+					if f == requestedFile+gzipExt {
 						serveCompressed(gzip, gzipExt)
-
 						return
 					}
 				}
 			}
-
 			// If the request does not accept compressed files, or the directory does not contain compressed files,
 			// serve the file as is.
-			http.ServeFile(w, r, file)
+			http.ServeFile(w, r, requestedFile)
 		}
 
-		switch filepath.Ext(file) {
+		switch filepath.Ext(requestedFile) {
 		case ".html":
 			w.Header().Set("Cache-Control", "no-cache")
 			serveFile("text/html")
@@ -179,9 +170,28 @@ func (f *fileServer) serveSPA() http.HandlerFunc {
 			serveFile("image/svg+xml")
 		default:
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-			http.ServeFile(w, r, file)
+			http.ServeFile(w, r, requestedFile)
 		}
 	}
+}
+
+func getFiles(dir string) []string {
+	files := []string{}
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		files = append(files, path)
+		return nil
+	})
+	if err != nil {
+		log.Error().Msgf("Error getting files to serve: %v", err)
+	}
+
+	return files
 }
 
 func (f *fileServer) setHeaders(h http.Handler) http.HandlerFunc {
@@ -275,7 +285,6 @@ func metricsMiddleware(metrics *metrics) func(h http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			snoop := httpsnoop.CaptureMetrics(h, w, r)
-
 			metrics.IncRequests(snoop.Code)
 			metrics.ObsDuration(snoop.Code, snoop.Duration.Seconds())
 			metrics.AddBytes(float64(snoop.Written))
