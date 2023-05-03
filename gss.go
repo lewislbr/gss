@@ -42,8 +42,7 @@ func setUpLogger() {
 		return time.Now().UTC()
 	}
 	zerolog.TimeFieldFormat = time.RFC3339Nano
-	log.Logger = log.With().Caller().Logger()
-	log.Logger = log.With().Str("app", "GSS").Logger()
+	log.Logger = log.With().Timestamp().Caller().Str("app", "GSS").Logger()
 }
 
 type config struct {
