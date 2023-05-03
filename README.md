@@ -82,7 +82,7 @@ Headers to add to the response. `Cache-Control`, `Content-Encoding`, `Content-Ty
 > # gss.yaml
 >
 > headers:
-> Content-Security-Policy: "default-src 'self'; connect-src 'self'"
+>   Content-Security-Policy: "default-src 'self'; connect-src 'self'"
 >   Referrer-Policy: "strict-origin-when-cross-origin"
 >   Strict-Transport-Security: "max-age=63072000; includeSubDomains; preload"
 >   X-Content-Type-Options: "nosniff"
