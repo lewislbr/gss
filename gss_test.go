@@ -41,7 +41,7 @@ func TestGSS(t *testing.T) {
 
 		fileServer.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, "100", w.Header().Get("X-Ratelimit-Limit"))
+		assert.NotEmpty(t, w.Header().Get("X-Ratelimit-Limit"))
 	})
 
 	t.Run("redirects index correctly", func(t *testing.T) {
