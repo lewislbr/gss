@@ -111,7 +111,7 @@ Enables metrics collection and exposes an endpoint at `:9090/metrics`. Collected
 
 ##### string: integer
 
-Enables rate limiting per minute per IP using a memory store. 15 by default.
+Configures the rate limit per minute per IP using a memory store. 15 by default.
 
 > Example:
 >
