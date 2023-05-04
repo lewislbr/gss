@@ -1,5 +1,5 @@
 headers:
   Referrer-Policy: "strict-origin-when-cross-origin"
-  Server: "GSS"
   Strict-Transport-Security: "max-age=63072000; includeSubDomains; preload"
 metrics: true
+rateLimit: 10

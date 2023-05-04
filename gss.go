@@ -14,6 +14,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/sethvargo/go-limiter/httplimit"
+	"github.com/sethvargo/go-limiter/memorystore"
 	"gopkg.in/yaml.v2"
 )
 
@@ -22,7 +24,7 @@ func main() {
 
 	var metrics *metrics
 	cfg := newConfig().withYAML()
-	if cfg.Metrics {
+	if cfg.MetricsEnabled {
 		metrics = registerMetrics()
 		internalServer := newInternalServer(metrics)
 		go func() {
@@ -48,12 +50,20 @@ func setUpLogger() {
 }
 
 type config struct {
-	Headers map[string]string `yaml:"headers,omitempty"`
-	Metrics bool              `yaml:"metrics,omitempty"`
+	ResponseHeaders    map[string]string `yaml:"headers,omitempty"`
+	MetricsEnabled     bool              `yaml:"metrics,omitempty"`
+	RateLimitPerMinute int               `yaml:"rateLimit,omitempty"`
 }
 
 func newConfig() *config {
-	return &config{}
+	return &config{
+		// Default values
+		ResponseHeaders: map[string]string{
+			"Server": "GSS",
+		},
+		MetricsEnabled:     false,
+		RateLimitPerMinute: 15,
+	}
 }
 
 func (c *config) withYAML() *config {
@@ -95,10 +105,23 @@ func newFileServer(cfg *config, metrics *metrics) *fileServer {
 }
 
 func (f *fileServer) init() *fileServer {
-	if f.Config.Metrics {
-		f.Server.Handler = metricsMiddleware(f.Metrics)(f.setHeaders((f.serveSPA())))
+	store, err := memorystore.New(&memorystore.Config{
+		Tokens:   uint64(f.Config.RateLimitPerMinute),
+		Interval: time.Minute,
+	})
+	if err != nil {
+		log.Fatal().Msgf("Error creating rate limit store: %v", err)
+	}
+
+	rateLimit, err := httplimit.NewMiddleware(store, httplimit.IPKeyFunc())
+	if err != nil {
+		log.Fatal().Msgf("Error creating rate limit middleware: %v", err)
+	}
+
+	if f.Config.MetricsEnabled {
+		f.Server.Handler = metricsMiddleware(f.Metrics)(rateLimit.Handle(f.setHeaders((f.serveSPA()))))
 	} else {
-		f.Server.Handler = f.setHeaders((f.serveSPA()))
+		f.Server.Handler = rateLimit.Handle(f.setHeaders((f.serveSPA())))
 	}
 
 	return f
@@ -112,7 +135,7 @@ func (f *fileServer) setHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Vary", "Accept-Encoding")
 
-		for k, v := range f.Config.Headers {
+		for k, v := range f.Config.ResponseHeaders {
 			w.Header().Set(k, v)
 		}
 

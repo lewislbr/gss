@@ -15,7 +15,7 @@ func TestGSS(t *testing.T) {
 		t.Parallel()
 
 		cfg := &config{
-			Headers: map[string]string{
+			ResponseHeaders: map[string]string{
 				"X-Test": "test",
 			},
 		}
@@ -26,6 +26,21 @@ func TestGSS(t *testing.T) {
 		fileServer.Server.Handler.ServeHTTP(w, r)
 
 		assert.Equal(t, "test", w.Header().Get("X-Test"))
+	})
+
+	t.Run("rate limits requests", func(t *testing.T) {
+		t.Parallel()
+
+		cfg := &config{
+			RateLimitPerMinute: 10,
+		}
+		fileServer := newFileServer(cfg, metrics).init()
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+
+		fileServer.Server.Handler.ServeHTTP(w, r)
+
+		assert.Equal(t, "10", w.Header().Get("X-Ratelimit-Limit"))
 	})
 
 	t.Run("redirects index correctly", func(t *testing.T) {
