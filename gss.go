@@ -20,17 +20,19 @@ import (
 func main() {
 	setUpLogger()
 
-	metrics := registerMetrics()
-	internalServer := newInternalServer(metrics)
-
-	go func() {
-		err := internalServer.run()
-		if err != nil {
-			log.Fatal().Msgf("Error starting internal server: %v", err)
-		}
-	}()
-
+	var metrics *metrics
 	cfg := newConfig().withYAML()
+	if cfg.Metrics {
+		metrics = registerMetrics()
+		internalServer := newInternalServer(metrics)
+		go func() {
+			err := internalServer.run()
+			if err != nil {
+				log.Fatal().Msgf("Error starting internal server: %v", err)
+			}
+		}()
+	}
+
 	err := newFileServer(cfg, metrics).init().run()
 	if err != nil {
 		log.Fatal().Msgf("Error starting file server: %v", err)
@@ -47,6 +49,7 @@ func setUpLogger() {
 
 type config struct {
 	Headers map[string]string `yaml:"headers,omitempty"`
+	Metrics bool              `yaml:"metrics,omitempty"`
 }
 
 func newConfig() *config {
@@ -75,15 +78,15 @@ func (c *config) withYAML() *config {
 }
 
 type fileServer struct {
-	Config  config
-	Metrics metrics
+	Config  *config
+	Metrics *metrics
 	Server  *http.Server
 }
 
 func newFileServer(cfg *config, metrics *metrics) *fileServer {
 	return &fileServer{
-		Config:  *cfg,
-		Metrics: *metrics,
+		Config:  cfg,
+		Metrics: metrics,
 		Server: &http.Server{
 			Addr:         ":8080",
 			WriteTimeout: 10 * time.Second,
@@ -92,13 +95,29 @@ func newFileServer(cfg *config, metrics *metrics) *fileServer {
 }
 
 func (f *fileServer) init() *fileServer {
-	f.Server.Handler = metricsMiddleware(&f.Metrics)(f.setHeaders((f.serveSPA())))
+	if f.Config.Metrics {
+		f.Server.Handler = metricsMiddleware(f.Metrics)(f.setHeaders((f.serveSPA())))
+	} else {
+		f.Server.Handler = f.setHeaders((f.serveSPA()))
+	}
 
 	return f
 }
 
 func (f *fileServer) run() error {
 	return f.Server.ListenAndServe()
+}
+
+func (f *fileServer) setHeaders(h http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Vary", "Accept-Encoding")
+
+		for k, v := range f.Config.Headers {
+			w.Header().Set(k, v)
+		}
+
+		h.ServeHTTP(w, r)
+	}
 }
 
 func (f *fileServer) serveSPA() http.HandlerFunc {
@@ -192,18 +211,6 @@ func getFiles(dir string) []string {
 	}
 
 	return files
-}
-
-func (f *fileServer) setHeaders(h http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Vary", "Accept-Encoding")
-
-		for k, v := range f.Config.Headers {
-			w.Header().Set(k, v)
-		}
-
-		h.ServeHTTP(w, r)
-	}
 }
 
 type internalServer struct {

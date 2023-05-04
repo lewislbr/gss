@@ -7,14 +7,14 @@ GSS (Go serve SPA) is a containerized web server for single-page applications wr
 - Optimized for single-page apps.
 - Automatically serves pre-compressed brotli and gzip files if available.
 - Sensible default cache configuration.
-- Out-of-the-box metrics.
+- Optional out-of-the-box metrics.
 - Docker-based.
 - Configurable via YAML.
 - Lightweight.
 
 ## Usage
 
-GSS works as a Docker image. By default it serves a directory in the container named `dist` at port `8080`, and exposes a metrics endpoint at `:9090/metrics`.
+GSS works as a Docker image. By default it serves a directory in the container named `dist` at port `8080`, and exposes a metrics endpoint at `:9090/metrics` if enabled.
 
 ### Running container directly
 
@@ -58,10 +58,10 @@ COPY [local-folder-to-serve-path] ./dist
 
 ## Configuration options
 
-The server can be configured with a YAML file. File must be named `/gss.yaml`.
+Optionally, the server can be configured with a YAML file named `/gss.yaml`.
 
-> Example:
->
+The configuration file should go into the container, such as:
+
 > ```sh
 > docker run -p 3000:8080 -v $PWD/gss.yaml:/gss.yaml -v $PWD/public:/dist lewislbr/gss
 > ```
@@ -72,7 +72,9 @@ The server can be configured with a YAML file. File must be named `/gss.yaml`.
 > COPY /public ./dist
 > ```
 
-### `headers`
+### Response headers: `headers`
+
+##### string: {string: string}
 
 Headers to add to the response. `Cache-Control`, `Content-Encoding`, `Content-Type`, and `Vary` are automatically set.
 
@@ -88,6 +90,20 @@ Headers to add to the response. `Cache-Control`, `Content-Encoding`, `Content-Ty
 >   X-Content-Type-Options: "nosniff"
 >   X-Frame-Options: "SAMEORIGIN"
 >   X-XSS-Protection: "1; mode=block"
+> ```
+
+### Metrics collection: `metrics`
+
+##### string: boolean
+
+Enables metrics collection and exposes an endpoint at `:9090/metrics`. Collected metrics include request duration, request status, total requests, and bytes written. False by default.
+
+> Example:
+>
+> ```yaml
+> # gss.yaml
+>
+> metrics: true
 > ```
 
 ## Contributing
