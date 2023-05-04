@@ -18,6 +18,7 @@ func TestGSS(t *testing.T) {
 			ResponseHeaders: map[string]string{
 				"X-Test": "test",
 			},
+			RateLimitPerMinute: 100,
 		}
 		fileServer := newFileServer(cfg, metrics).init()
 		w := httptest.NewRecorder()
@@ -32,7 +33,7 @@ func TestGSS(t *testing.T) {
 		t.Parallel()
 
 		cfg := &config{
-			RateLimitPerMinute: 10,
+			RateLimitPerMinute: 100,
 		}
 		fileServer := newFileServer(cfg, metrics).init()
 		w := httptest.NewRecorder()
@@ -40,13 +41,15 @@ func TestGSS(t *testing.T) {
 
 		fileServer.Server.Handler.ServeHTTP(w, r)
 
-		assert.Equal(t, "10", w.Header().Get("X-Ratelimit-Limit"))
+		assert.Equal(t, "100", w.Header().Get("X-Ratelimit-Limit"))
 	})
 
 	t.Run("redirects index correctly", func(t *testing.T) {
 		t.Parallel()
 
-		cfg := &config{}
+		cfg := &config{
+			RateLimitPerMinute: 100,
+		}
 		fileServer := newFileServer(cfg, metrics).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/index.html", nil)
@@ -59,7 +62,9 @@ func TestGSS(t *testing.T) {
 	t.Run("serves HTML files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		cfg := &config{}
+		cfg := &config{
+			RateLimitPerMinute: 100,
+		}
 		fileServer := newFileServer(cfg, metrics).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -74,7 +79,9 @@ func TestGSS(t *testing.T) {
 	t.Run("serves CSS files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		cfg := &config{}
+		cfg := &config{
+			RateLimitPerMinute: 100,
+		}
 		fileServer := newFileServer(cfg, metrics).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/static/main.68aa49f7.css", nil)
@@ -89,7 +96,9 @@ func TestGSS(t *testing.T) {
 	t.Run("serves JavaScript files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		cfg := &config{}
+		cfg := &config{
+			RateLimitPerMinute: 100,
+		}
 		fileServer := newFileServer(cfg, metrics).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/static/main.8d3db4ef.js", nil)
@@ -104,7 +113,9 @@ func TestGSS(t *testing.T) {
 	t.Run("serves other files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		cfg := &config{}
+		cfg := &config{
+			RateLimitPerMinute: 100,
+		}
 		fileServer := newFileServer(cfg, metrics).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/static/main.8d3db4ef.js.LICENSE.txt", nil)
@@ -118,7 +129,9 @@ func TestGSS(t *testing.T) {
 	t.Run("serves brotli files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		cfg := &config{}
+		cfg := &config{
+			RateLimitPerMinute: 100,
+		}
 		fileServer := newFileServer(cfg, metrics).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -133,7 +146,9 @@ func TestGSS(t *testing.T) {
 		t.Run("serves brotli files under nested folders succesfully", func(t *testing.T) {
 			t.Parallel()
 
-			cfg := &config{}
+			cfg := &config{
+				RateLimitPerMinute: 100,
+			}
 			fileServer := newFileServer(cfg, metrics).init()
 			w := httptest.NewRecorder()
 			r := httptest.NewRequest(http.MethodGet, "/static/main.8d3db4ef.js", nil)
@@ -150,7 +165,9 @@ func TestGSS(t *testing.T) {
 	t.Run("serves gzip files succesfully", func(t *testing.T) {
 		t.Parallel()
 
-		cfg := &config{}
+		cfg := &config{
+			RateLimitPerMinute: 100,
+		}
 		fileServer := newFileServer(cfg, metrics).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -165,7 +182,9 @@ func TestGSS(t *testing.T) {
 		t.Run("serves gzip files under nested folders succesfully", func(t *testing.T) {
 			t.Parallel()
 
-			cfg := &config{}
+			cfg := &config{
+				RateLimitPerMinute: 100,
+			}
 			fileServer := newFileServer(cfg, metrics).init()
 			w := httptest.NewRecorder()
 			r := httptest.NewRequest(http.MethodGet, "/static/main.8d3db4ef.js", nil)
@@ -182,7 +201,9 @@ func TestGSS(t *testing.T) {
 	t.Run("serves unexisting files without extension", func(t *testing.T) {
 		t.Parallel()
 
-		cfg := &config{}
+		cfg := &config{
+			RateLimitPerMinute: 100,
+		}
 		fileServer := newFileServer(cfg, metrics).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/random-page", nil)
@@ -197,7 +218,9 @@ func TestGSS(t *testing.T) {
 	t.Run("doesn't serve unexisting files with extension", func(t *testing.T) {
 		t.Parallel()
 
-		cfg := &config{}
+		cfg := &config{
+			RateLimitPerMinute: 100,
+		}
 		fileServer := newFileServer(cfg, metrics).init()
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodGet, "/favicon.ico", nil)
@@ -210,7 +233,9 @@ func TestGSS(t *testing.T) {
 	t.Run("serves a cached response for a fresh resource", func(t *testing.T) {
 		t.Parallel()
 
-		cfg := &config{}
+		cfg := &config{
+			RateLimitPerMinute: 100,
+		}
 		fileServer := newFileServer(cfg, metrics).init()
 
 		t.Run("HTML files should have Cache-Control: no-cache", func(t *testing.T) {
