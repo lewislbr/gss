@@ -7,7 +7,6 @@ GSS (Go serve SPA) is a containerized web server for single-page applications wr
 - Optimized for single-page apps.
 - Automatically serves pre-compressed brotli and gzip files if available.
 - Sensible default cache configuration.
-- Configurable response headers.
 - Optional out-of-the-box metrics.
 - Deployable as a container.
 - Lightweight.
@@ -98,26 +97,6 @@ Configures the port where metrics, if enabled, will be available. `8081` by defa
 > # gss.yaml
 >
 > metricsPort: 3001
-> ```
-
-### Response headers: `headers`
-
-##### string: {string: string}
-
-Headers to add to the response. `Cache-Control`, `Content-Encoding`, `Content-Type`, and `Vary` are automatically set.
-
-> Example:
->
-> ```yaml
-> # gss.yaml
->
-> headers:
->   Content-Security-Policy: "default-src 'self'; connect-src 'self'"
->   Referrer-Policy: "strict-origin-when-cross-origin"
->   Strict-Transport-Security: "max-age=63072000; includeSubDomains; preload"
->   X-Content-Type-Options: "nosniff"
->   X-Frame-Options: "SAMEORIGIN"
->   X-XSS-Protection: "1; mode=block"
 > ```
 
 ### Metrics collection: `metrics`

@@ -48,20 +48,16 @@ func setUpLogger() {
 }
 
 type config struct {
-	FilesPort       int               `yaml:"filesPort,omitempty"`
-	MetricsPort     int               `yaml:"metricsPort,omitempty"`
-	ResponseHeaders map[string]string `yaml:"headers,omitempty"`
-	MetricsEnabled  bool              `yaml:"metrics,omitempty"`
+	FilesPort      int  `yaml:"filesPort,omitempty"`
+	MetricsPort    int  `yaml:"metricsPort,omitempty"`
+	MetricsEnabled bool `yaml:"metrics,omitempty"`
 }
 
 func newConfig() *config {
 	return &config{
 		// Default values
-		FilesPort:   8080,
-		MetricsPort: 8081,
-		ResponseHeaders: map[string]string{
-			"Server": "GSS",
-		},
+		FilesPort:      8080,
+		MetricsPort:    8081,
 		MetricsEnabled: false,
 	}
 }
@@ -121,10 +117,6 @@ func (f *fileServer) run() error {
 func (f *fileServer) setHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Vary", "Accept-Encoding")
-
-		for k, v := range f.Config.ResponseHeaders {
-			w.Header().Set(k, v)
-		}
 
 		h.ServeHTTP(w, r)
 	}

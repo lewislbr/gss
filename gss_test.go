@@ -11,23 +11,6 @@ import (
 func TestGSS(t *testing.T) {
 	metrics := registerMetrics()
 
-	t.Run("uses the provided headers", func(t *testing.T) {
-		t.Parallel()
-
-		cfg := &config{
-			ResponseHeaders: map[string]string{
-				"X-Test": "test",
-			},
-		}
-		fileServer := newFileServer(cfg, metrics).init()
-		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-
-		fileServer.Server.Handler.ServeHTTP(w, r)
-
-		assert.Equal(t, "test", w.Header().Get("X-Test"))
-	})
-
 	t.Run("redirects index correctly", func(t *testing.T) {
 		t.Parallel()
 
