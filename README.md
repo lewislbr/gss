@@ -73,6 +73,34 @@ The configuration file should go into the container, such as:
 > COPY /public ./dist
 > ```
 
+### Files port: `filesPort`
+
+##### string: integer
+
+Configures the port where files will be served. `8080` by default.
+
+> Example:
+>
+> ```yaml
+> # gss.yaml
+>
+> filesPort: 3000
+> ```
+
+### Metrics port: `metricsPort`
+
+##### string: integer
+
+Configures the port where metrics, if enabled, will be available. `8081` by default.
+
+> Example:
+>
+> ```yaml
+> # gss.yaml
+>
+> metricsPort: 3001
+> ```
+
 ### Response headers: `headers`
 
 ##### string: {string: string}
@@ -97,7 +125,7 @@ Headers to add to the response. `Cache-Control`, `Content-Encoding`, `Content-Ty
 
 ##### string: boolean
 
-Enables metrics collection and exposes an endpoint at `:9090/metrics`. Collected metrics include request duration, request status, total requests, and bytes written. False by default.
+Enables metrics collection and exposes an endpoint at `:<metricsPort>/metrics`. Collected metrics include request duration, request status, total requests, and bytes written. False by default.
 
 > Example:
 >

@@ -26,7 +26,7 @@ func main() {
 	cfg := newConfig().withYAML()
 	if cfg.MetricsEnabled {
 		metrics = registerMetrics()
-		internalServer := newInternalServer(metrics)
+		internalServer := newInternalServer(cfg, metrics)
 		go func() {
 			err := internalServer.run()
 			if err != nil {
@@ -50,6 +50,8 @@ func setUpLogger() {
 }
 
 type config struct {
+	FilesPort          int               `yaml:"filesPort,omitempty"`
+	MetricsPort        int               `yaml:"metricsPort,omitempty"`
 	ResponseHeaders    map[string]string `yaml:"headers,omitempty"`
 	MetricsEnabled     bool              `yaml:"metrics,omitempty"`
 	RateLimitPerMinute int               `yaml:"rateLimit,omitempty"`
@@ -58,6 +60,8 @@ type config struct {
 func newConfig() *config {
 	return &config{
 		// Default values
+		FilesPort:   8080,
+		MetricsPort: 8081,
 		ResponseHeaders: map[string]string{
 			"Server": "GSS",
 		},
@@ -98,7 +102,7 @@ func newFileServer(cfg *config, metrics *metrics) *fileServer {
 		Config:  cfg,
 		Metrics: metrics,
 		Server: &http.Server{
-			Addr:         ":8080",
+			Addr:         ":" + strconv.Itoa(cfg.FilesPort),
 			WriteTimeout: 10 * time.Second,
 		},
 	}
@@ -240,14 +244,13 @@ type internalServer struct {
 	Server *http.Server
 }
 
-func newInternalServer(metrics *metrics) *internalServer {
+func newInternalServer(cfg *config, metrics *metrics) *internalServer {
 	http.HandleFunc("/metrics", metrics.Default().ServeHTTP)
 
-	s := &http.Server{}
-	s.Addr = ":9090"
-
 	return &internalServer{
-		Server: s,
+		Server: &http.Server{
+			Addr: ":" + strconv.Itoa(cfg.MetricsPort),
+		},
 	}
 }
 
