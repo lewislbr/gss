@@ -7,7 +7,6 @@ GSS (Go serve SPA) is a containerized web server for single-page applications wr
 - Optimized for single-page apps.
 - Automatically serves pre-compressed brotli and gzip files if available.
 - Sensible default cache configuration.
-- Configurable rate limiter.
 - Configurable response headers.
 - Optional out-of-the-box metrics.
 - Deployable as a container.
@@ -133,20 +132,6 @@ Enables metrics collection and exposes an endpoint at `:<metricsPort>/metrics`. 
 > # gss.yaml
 >
 > metrics: true
-> ```
-
-### Rate limit per minute: `rateLimit`
-
-##### string: integer
-
-Configures the rate limit per minute per IP using a memory store. 15 by default.
-
-> Example:
->
-> ```yaml
-> # gss.yaml
->
-> rateLimit: 10
 > ```
 
 ## Contributing

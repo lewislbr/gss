@@ -14,8 +14,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/sethvargo/go-limiter/httplimit"
-	"github.com/sethvargo/go-limiter/memorystore"
 	"gopkg.in/yaml.v2"
 )
 
@@ -50,11 +48,10 @@ func setUpLogger() {
 }
 
 type config struct {
-	FilesPort          int               `yaml:"filesPort,omitempty"`
-	MetricsPort        int               `yaml:"metricsPort,omitempty"`
-	ResponseHeaders    map[string]string `yaml:"headers,omitempty"`
-	MetricsEnabled     bool              `yaml:"metrics,omitempty"`
-	RateLimitPerMinute int               `yaml:"rateLimit,omitempty"`
+	FilesPort       int               `yaml:"filesPort,omitempty"`
+	MetricsPort     int               `yaml:"metricsPort,omitempty"`
+	ResponseHeaders map[string]string `yaml:"headers,omitempty"`
+	MetricsEnabled  bool              `yaml:"metrics,omitempty"`
 }
 
 func newConfig() *config {
@@ -65,8 +62,7 @@ func newConfig() *config {
 		ResponseHeaders: map[string]string{
 			"Server": "GSS",
 		},
-		MetricsEnabled:     false,
-		RateLimitPerMinute: 15,
+		MetricsEnabled: false,
 	}
 }
 
@@ -109,23 +105,10 @@ func newFileServer(cfg *config, metrics *metrics) *fileServer {
 }
 
 func (f *fileServer) init() *fileServer {
-	store, err := memorystore.New(&memorystore.Config{
-		Tokens:   uint64(f.Config.RateLimitPerMinute),
-		Interval: time.Minute,
-	})
-	if err != nil {
-		log.Fatal().Msgf("Error creating rate limit store: %v", err)
-	}
-
-	rateLimit, err := httplimit.NewMiddleware(store, httplimit.IPKeyFunc())
-	if err != nil {
-		log.Fatal().Msgf("Error creating rate limit middleware: %v", err)
-	}
-
 	if f.Config.MetricsEnabled {
-		f.Server.Handler = metricsMiddleware(f.Metrics)(rateLimit.Handle(f.setHeaders((f.serveSPA()))))
+		f.Server.Handler = metricsMiddleware(f.Metrics)(f.setHeaders((f.serveSPA())))
 	} else {
-		f.Server.Handler = rateLimit.Handle(f.setHeaders((f.serveSPA())))
+		f.Server.Handler = f.setHeaders((f.serveSPA()))
 	}
 
 	return f
