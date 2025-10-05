@@ -1,5 +1,47 @@
 # GSS
 
+> [!IMPORTANT]
+> This project is currently deprecated. The same functionality (actually, better) can be achieved with [nginx](https://nginx.org) and the following configuration:
+>
+> ```nginx
+> load_module modules/ngx_http_brotli_static_module.so;
+> load_module modules/ngx_http_headers_more_filter_module.so;
+>
+> events {}
+>
+> http {
+>  include /etc/nginx/mime.types;
+>  default_type application/octet-stream;
+>  sendfile on;
+>
+>  server {
+>    listen 3000;
+>
+>    root /var/www/html/build;
+>
+>    more_set_headers "X-Frame-Options: SAMEORIGIN";
+>    more_set_headers "X-Content-Type-Options: nosniff";
+>    more_set_headers "X-XSS-Protection: 1; mode=block";
+>
+>    brotli_static on;
+>
+>    gzip_static on;
+>
+>    try_files $uri $uri/ /index.html =404;
+>
+>    more_set_headers "Vary: Accept-Encoding";
+>
+>    location = /index.html {
+>      more_set_headers "Cache-Control: no-cache";
+>    }
+>
+>    location ~* \.(js|css|svg|woff2|woff|ttf|png|jpg|jpeg|gif|ico)$ {
+>      more_set_headers "Cache-Control: public, max-age=31536000, immutable";
+>    }
+>  }
+> }
+> ```
+
 GSS (Go serve SPA) is a containerized web server for single-page applications written in Go.
 
 ## Features
@@ -115,4 +157,4 @@ Enables metrics collection and exposes an endpoint at `:<metricsPort>/metrics`. 
 
 ## Contributing
 
-This project started as a way to learn and to solve a need I had. If you think it can be improved in any way, you are very welcome to contribute!
+This project started as a way to learn and to solve a need I had. It is currently deprecated.
